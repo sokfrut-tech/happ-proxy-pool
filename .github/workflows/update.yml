@@ -2,6 +2,8 @@ name: Update Happ Proxy Pool
 
 on:
   push:
+    branches: ["main", "prototype/xray-real-checks"]
+  pull_request:
     branches: ["main"]
   schedule:
     - cron: "15 * * * *"
@@ -10,49 +12,63 @@ on:
 permissions:
   contents: write
 
+# Newer runs supersede older runs so stale jobs cannot republish old results.
 concurrency:
-  group: happ-proxy-pool
-  cancel-in-progress: false
+  group: happ-proxy-pool-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-pool:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: prototype/xray-real-checks
+
+      - name: Record checked-out revision
+        run: echo "CHECKED_OUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Collect encrypted share links and check TCP endpoints
-        run: python3 generator.py
+      - name: Install Xray core
+        run: |
+          curl -fsSL https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip -o /tmp/xray.zip
+          unzip -q /tmp/xray.zip xray -d /tmp/xray
+          chmod +x /tmp/xray/xray
+          /tmp/xray/xray version
 
-      - name: Validate generated JSON
-        run: python3 -m json.tool happ_config.json > /dev/null
+      - name: Collect and verify nodes with real HTTPS requests
+        run: python3 generator.py --xray /tmp/xray/xray
 
-      - name: Commit updated pool safely
+      - name: Validate generated config with Xray
+        run: |
+          python3 -m json.tool happ_config.json > /dev/null
+          /tmp/xray/xray run -test -c happ_config.json
+
+      - name: Commit verified pool safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for attempt in 1 2 3; do
-            git fetch origin main
-            git reset --hard origin/main
-            python3 generator.py
-            python3 -m json.tool happ_config.json > /dev/null
-            git add happ_config.json
-            if git diff --cached --quiet; then
-              echo "No changes in proxy pool."
-              exit 0
-            fi
-            git commit -m "Update Happ proxy pool [skip ci]"
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "Push race on attempt $attempt; retrying from latest main."
-            sleep 2
-          done
-          echo "Could not publish proxy pool after 3 attempts."
+          git add happ_config.json happ_subscription.txt
+          if git diff --cached --quiet; then
+            echo "No changes in verified pool."
+            exit 0
+          fi
+          git commit -m "Update Happ pool with Xray-verified nodes [skip ci]"
+          # Never rebase stale generated output over a newer branch revision.
+          git fetch origin prototype/xray-real-checks
+          REMOTE_SHA=$(git rev-parse origin/prototype/xray-real-checks)
+          if [ "$REMOTE_SHA" != "$CHECKED_OUT_SHA" ]; then
+            echo "Discarding stale probe results: branch advanced from $CHECKED_OUT_SHA to $REMOTE_SHA."
+            exit 0
+          fi
+          if git push origin HEAD:prototype/xray-real-checks; then
+            exit 0
+          fi
+          echo "Branch changed during publication; discarding this run rather than rebasing stale generated files."
           exit 1
