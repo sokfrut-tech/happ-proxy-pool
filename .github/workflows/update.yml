@@ -54,4 +54,14 @@ jobs:
             exit 0
           fi
           git commit -m "Update Happ pool with Xray-verified nodes [skip ci]"
-          git push origin HEAD:prototype/xray-real-checks
+          # Another scheduled/PR run may have advanced the branch after checkout.
+          # Rebase our generated files onto the latest branch and retry safely.
+          for attempt in 1 2 3; do
+            git pull --rebase origin prototype/xray-real-checks
+            if git push origin HEAD:prototype/xray-real-checks; then
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          echo "Could not publish after three rebase/push attempts."
+          exit 1
