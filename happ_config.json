@@ -1,5 +1,5 @@
 {
-  "remarks": "GitHub Free Encrypted Pool (10 HTTPS-verified nodes)",
+  "remarks": "Germany-priority free pool (10 HTTPS-verified nodes)",
   "log": {
     "loglevel": "warning"
   },
@@ -63,7 +63,7 @@
       "settings": {
         "servers": [
           {
-            "address": "156.146.38.167",
+            "address": "156.146.38.170",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -73,78 +73,6 @@
     },
     {
       "tag": "node_3",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "156.146.38.169",
-            "port": 443,
-            "method": "aes-128-gcm",
-            "password": "shadowsocks"
-          }
-        ]
-      }
-    },
-    {
-      "tag": "node_4",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "31.172.69.31",
-            "port": 8443,
-            "users": [
-              {
-                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "www.samsung.com",
-          "fingerprint": "qq",
-          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
-          "shortId": "a4e32c324d86cfdf"
-        }
-      }
-    },
-    {
-      "tag": "node_5",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "104.21.7.133",
-            "port": 80,
-            "users": [
-              {
-                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/ws?ed=2048",
-          "headers": {
-            "Host": "vmess.lbw666.dpdns.org"
-          }
-        }
-      }
-    },
-    {
-      "tag": "node_6",
       "protocol": "vmess",
       "settings": {
         "vnext": [
@@ -173,7 +101,111 @@
       }
     },
     {
+      "tag": "node_4",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.167",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_5",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.169",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_6",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "31.172.69.31",
+            "port": 8443,
+            "users": [
+              {
+                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.samsung.com",
+          "fingerprint": "qq",
+          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
+          "shortId": "a4e32c324d86cfdf"
+        }
+      }
+    },
+    {
       "tag": "node_7",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "104.17.136.198",
+            "port": 443,
+            "users": [
+              {
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "vmess.lbw666.dpdns.org",
+          "fingerprint": "chrome"
+        },
+        "wsSettings": {
+          "path": "/ws?ed=2048",
+          "headers": {
+            "Host": "vmess.lbw666.dpdns.org"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_8",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "37.19.198.236",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_9",
       "protocol": "vmess",
       "settings": {
         "vnext": [
@@ -202,69 +234,17 @@
       }
     },
     {
-      "tag": "node_8",
+      "tag": "node_10",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
           {
-            "address": "216.128.153.186",
+            "address": "37.19.198.160",
             "port": 443,
-            "method": "chacha20-ietf-poly1305",
-            "password": "gWXhRbGoI53aSRV8fv9alMwr"
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
           }
         ]
-      }
-    },
-    {
-      "tag": "node_9",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "195.211.98.43",
-            "port": 443,
-            "users": [
-              {
-                "id": "1b4b11d5-4c2d-4533-9a55-636757cdee94",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "www.cloudflare.com",
-          "fingerprint": "firefox",
-          "publicKey": "xPnpkXu5qfwIArlHKvJsqKJnGdGbJK1tT2GzWMyLohA",
-          "shortId": "9c56fddf237e8eaf"
-        }
-      }
-    },
-    {
-      "tag": "node_10",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "23.162.200.198",
-            "port": 18000,
-            "users": [
-              {
-                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "raw",
-        "security": "none"
       }
     },
     {
