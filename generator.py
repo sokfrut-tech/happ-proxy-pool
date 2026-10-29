@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Collect public Shadowsocks/VLESS/VMess share links and build an Xray config.
+"""Collect public share links, verify real HTTPS traffic, and prefer German nodes.
 
-A TCP connect check only confirms that an endpoint accepts TCP connections.
-It does NOT prove VPN authentication, end-to-end traffic, UDP support, privacy,
-or continuing availability. Public nodes are untrusted.
+A successful probe does not prove UDP support, long-term availability, or privacy.
+Public nodes are untrusted; never use them for sensitive traffic.
 """
 import base64
 import concurrent.futures
+import ipaddress
 import json
 import os
 import shutil
@@ -23,10 +23,15 @@ MAX_NODES = 10
 MAX_CANDIDATES = 80
 CONNECT_TIMEOUT = 3
 USER_AGENT = "HappFreeNodePool/1.0"
+# Germany first; nearby European countries are fallbacks before overseas nodes.
+EUROPE_COUNTRIES = {
+    "DE", "AT", "CH", "NL", "BE", "LU", "FR", "PL", "CZ", "DK",
+    "SE", "NO", "FI", "IT", "ES", "PT", "GB", "IE", "EE", "LV",
+    "LT", "SK", "SI", "HR", "HU", "RO", "BG", "GR", "IS", "UA",
+}
 
 
 def decode_subscription(text):
-    """Accept plain share links or a base64-encoded subscription body."""
     text = text.strip().lstrip("\ufeff")
     decoded = text
     compact = "".join(text.split())
@@ -38,12 +43,8 @@ def decode_subscription(text):
                 decoded = candidate
         except Exception:
             pass
-    links = []
-    for line in decoded.splitlines():
-        line = line.strip()
-        if line.startswith(("ss://", "vless://", "vmess://")):
-            links.append(line)
-    return links
+    return [line.strip() for line in decoded.splitlines()
+            if line.strip().startswith(("ss://", "vless://", "vmess://"))]
 
 
 def fetch_links():
@@ -84,17 +85,12 @@ def parse_ss(link):
         credentials, endpoint = decoded.rsplit("@", 1)
         method, password = credentials.split(":", 1)
         host, port = endpoint.rsplit(":", 1)
-    host = host.strip("[]")
-    port = int(port)
+    host, port = host.strip("[]"), int(port)
     if not host or not (1 <= port <= 65535) or not method or not password:
         raise ValueError("invalid Shadowsocks endpoint or credentials")
-    return {
-        "tag": "node_ss",
-        "protocol": "shadowsocks",
-        "settings": {
-            "servers": [{"address": host, "port": port, "method": method, "password": password}]
-        },
-    }, host, port
+    return {"tag": "node_ss", "protocol": "shadowsocks",
+            "settings": {"servers": [{"address": host, "port": port,
+                                      "method": method, "password": password}]}}, host, port
 
 
 def stream_settings(query, host):
@@ -109,93 +105,59 @@ def stream_settings(query, host):
             tls["alpn"] = query["alpn"][0].split(",")
         stream["tlsSettings"] = tls
     elif security == "reality":
-        reality = {
-            "serverName": query.get("sni", [host])[0],
-            "fingerprint": query.get("fp", ["chrome"])[0],
-            "publicKey": query.get("pbk", [""])[0],
-            "shortId": query.get("sid", [""])[0],
-        }
+        reality = {"serverName": query.get("sni", [host])[0],
+                   "fingerprint": query.get("fp", ["chrome"])[0],
+                   "publicKey": query.get("pbk", [""])[0],
+                   "shortId": query.get("sid", [""])[0]}
         if query.get("spx"):
             reality["spiderX"] = query["spx"][0]
         stream["realitySettings"] = reality
-
     if network == "ws":
         ws = {"path": query.get("path", ["/"])[0]}
         if query.get("host"):
             ws["headers"] = {"Host": query["host"][0]}
         stream["wsSettings"] = ws
     elif network == "grpc":
-        stream["grpcSettings"] = {
-            "serviceName": query.get("serviceName", [""])[0],
-            "multiMode": query.get("mode", [""])[0] == "multi",
-        }
+        stream["grpcSettings"] = {"serviceName": query.get("serviceName", [""])[0],
+                                  "multiMode": query.get("mode", [""])[0] == "multi"}
     elif network == "httpupgrade":
-        stream["httpupgradeSettings"] = {
-            "path": query.get("path", ["/"])[0],
-            "host": query.get("host", [""])[0],
-        }
+        stream["httpupgradeSettings"] = {"path": query.get("path", ["/"])[0],
+                                          "host": query.get("host", [""])[0]}
     return stream
 
 
 def parse_vless(link):
     parsed = urllib.parse.urlsplit(link)
     query = urllib.parse.parse_qs(parsed.query)
-    user_id = urllib.parse.unquote(parsed.username or "")
-    host, port = parsed.hostname, parsed.port
+    user_id, host, port = urllib.parse.unquote(parsed.username or ""), parsed.hostname, parsed.port
     if not user_id or not host or not port:
         raise ValueError("invalid VLESS URI")
     user = {"id": user_id, "encryption": query.get("encryption", ["none"])[0]}
-    flow = query.get("flow", [""])[0]
-    if flow:
-        user["flow"] = flow
-    outbound = {
-        "tag": "node_vless",
-        "protocol": "vless",
-        "settings": {"vnext": [{"address": host, "port": port, "users": [user]}]},
-        "streamSettings": stream_settings(query, host),
-    }
-    return outbound, host, port
+    if query.get("flow", [""])[0]:
+        user["flow"] = query["flow"][0]
+    return {"tag": "node_vless", "protocol": "vless",
+            "settings": {"vnext": [{"address": host, "port": port, "users": [user]}]},
+            "streamSettings": stream_settings(query, host)}, host, port
 
 
 def parse_vmess(link):
-    payload = b64decode(link[len("vmess://"):])
-    item = json.loads(payload)
-    host = item.get("add")
-    port = int(item.get("port", 0))
-    user_id = item.get("id")
+    item = json.loads(b64decode(link[len("vmess://"):]))
+    host, port, user_id = item.get("add"), int(item.get("port", 0)), item.get("id")
     if not host or not user_id or not (1 <= port <= 65535):
         raise ValueError("invalid VMess JSON")
-    network = item.get("net", "tcp")
-    security = item.get("tls", "")
-    query = {
-        "type": [network],
-        "security": [security if security in ("tls", "reality") else "none"],
-        "sni": [item.get("sni") or item.get("host") or host],
-        "path": [item.get("path", "/")],
-        "host": [item.get("host", "")],
-        "serviceName": [item.get("path", "")],
-        "fp": [item.get("fp", "chrome")],
-    }
+    network, security = item.get("net", "tcp"), item.get("tls", "")
+    query = {"type": [network], "security": [security if security in ("tls", "reality") else "none"],
+             "sni": [item.get("sni") or item.get("host") or host],
+             "path": [item.get("path", "/")], "host": [item.get("host", "")],
+             "serviceName": [item.get("path", "")], "fp": [item.get("fp", "chrome")]}
     stream = stream_settings(query, host)
     if network == "tcp" and item.get("type") == "http":
         stream["tcpSettings"] = {"header": {"type": "http"}}
-    outbound = {
-        "tag": "node_vmess",
-        "protocol": "vmess",
-        "settings": {
-            "vnext": [{
-                "address": host,
-                "port": port,
-                "users": [{
-                    "id": user_id,
-                    "alterId": int(item.get("aid", 0)),
-                    "security": item.get("scy", "auto"),
-                }],
-            }]
-        },
-        "streamSettings": stream,
-    }
-    return outbound, host, port
+    return {"tag": "node_vmess", "protocol": "vmess",
+            "settings": {"vnext": [{"address": host, "port": port,
+                                    "users": [{"id": user_id, "alterId": int(item.get("aid", 0)),
+                                               "security": item.get("scy", "auto")}]}]},
+            "streamSettings": stream}, host, port
 
 
 def parse_link(link):
@@ -208,17 +170,41 @@ def parse_link(link):
     raise ValueError("unsupported scheme")
 
 
+def country_code(host):
+    """Resolve endpoint and use a public IP geolocation endpoint; unknown stays last."""
+    try:
+        try:
+            ipaddress.ip_address(host)
+            ip = host
+        except ValueError:
+            ip = socket.gethostbyname(host)
+        req = urllib.request.Request(
+            f"https://ipapi.co/{urllib.parse.quote(ip, safe='')}/country/",
+            headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=4) as response:
+            code = response.read(32).decode("ascii", "ignore").strip().upper()
+        return code if len(code) == 2 and code.isalpha() else "ZZ"
+    except Exception as exc:
+        print(f"GEO UNKNOWN {host}: {type(exc).__name__}")
+        return "ZZ"
+
+
+def geo_rank(code):
+    if code == "DE":
+        return 0
+    if code in EUROPE_COUNTRIES:
+        return 1
+    return 2
+
+
 def real_proxy_check(xray_bin, outbound):
-    """Require a real HTTPS request through an isolated Xray SOCKS inbound."""
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         local_port = sock.getsockname()[1]
-    probe = {
-        "log": {"loglevel": "error"},
-        "inbounds": [{"listen": "127.0.0.1", "port": local_port,
-                      "protocol": "socks", "settings": {"auth": "noauth", "udp": False}}],
-        "outbounds": [outbound],
-    }
+    probe = {"log": {"loglevel": "error"},
+             "inbounds": [{"listen": "127.0.0.1", "port": local_port,
+                           "protocol": "socks", "settings": {"auth": "noauth", "udp": False}}],
+             "outbounds": [outbound]}
     with tempfile.TemporaryDirectory() as tmp:
         config_path = os.path.join(tmp, "probe.json")
         with open(config_path, "w", encoding="utf-8") as handle:
@@ -264,70 +250,37 @@ def real_proxy_check(xray_bin, outbound):
 
 def build_config(candidates):
     outbounds = []
-    for index, (outbound, _host, _port, _latency, _link) in enumerate(candidates, 1):
+    for index, (outbound, _host, _port, _latency, _link, _country) in enumerate(candidates, 1):
         outbound["tag"] = f"node_{index}"
         outbounds.append(outbound)
-
-    outbounds.extend([
-        {"tag": "direct", "protocol": "freedom"},
-        {"tag": "block", "protocol": "blackhole"},
-    ])
-    rules = [
-        {
-            "type": "field",
-            "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8", "169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10"],
-            "outboundTag": "direct",
-        },
-    ]
+    outbounds.extend([{"tag": "direct", "protocol": "freedom"},
+                      {"tag": "block", "protocol": "blackhole"}])
+    rules = [{"type": "field",
+              "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+                     "127.0.0.0/8", "169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10"],
+              "outboundTag": "direct"}]
     routing = {"domainStrategy": "AsIs", "rules": rules}
     if outbounds[:-2]:
-        routing["balancers"] = [{
-            "tag": "free-node-balancer",
-            "selector": ["node_"],
-            "strategy": {"type": "roundRobin"},
-        }]
-        rules.append({
-            "type": "field",
-            "network": "tcp,udp",
-            "balancerTag": "free-node-balancer",
-        })
-    else:
-        rules.append({
-            "type": "field",
-            "network": "tcp,udp",
-            "outboundTag": "direct",
-        })
-
-    config = {
-        "remarks": f"GitHub Free Encrypted Pool ({len(candidates)} HTTPS-verified nodes)",
-        "log": {"loglevel": "warning"},
-        "stats": {},
-        "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
-        "inbounds": [
-            {
-                "tag": "socks-in", "port": 10808, "listen": "127.0.0.1",
-                "protocol": "socks",
-                "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
-                "settings": {"auth": "noauth", "udp": True},
-            },
-            {
-                "tag": "http-in", "port": 10809, "listen": "127.0.0.1",
-                "protocol": "http",
-                "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
-            },
-        ],
-        "outbounds": outbounds,
-        "routing": routing,
-    }
+        routing["balancers"] = [{"tag": "free-node-balancer", "selector": ["node_"],
+                                 "strategy": {"type": "roundRobin"}}]
+        rules.append({"type": "field", "network": "tcp,udp",
+                      "balancerTag": "free-node-balancer"})
+    config = {"remarks": f"Germany-priority free pool ({len(candidates)} HTTPS-verified nodes)",
+              "log": {"loglevel": "warning"}, "stats": {},
+              "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
+              "inbounds": [
+                  {"tag": "socks-in", "port": 10808, "listen": "127.0.0.1", "protocol": "socks",
+                   "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
+                   "settings": {"auth": "noauth", "udp": True}},
+                  {"tag": "http-in", "port": 10809, "listen": "127.0.0.1", "protocol": "http",
+                   "sniffing": {"enabled": True, "destOverride": ["http", "tls"]}}],
+              "outbounds": outbounds, "routing": routing}
     with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
         file.write("\n")
-
-    # Happ mobile subscriptions should be share-link lists, not a full Xray
-    # core config with localhost inbounds that bypasses Happ's TUN setup.
     with open("happ_subscription.txt", "w", encoding="utf-8") as file:
-        file.write("#profile-title: Free Verified Pool\n")
-        for _outbound, _host, _port, _latency, link in candidates:
+        file.write("#profile-title: Germany Priority Free Pool\n")
+        for _outbound, _host, _port, _latency, link, _country in candidates:
             file.write(link + "\n")
 
 
@@ -350,22 +303,32 @@ def main():
                 parsed.append((outbound, host, port, link))
         except Exception as exc:
             print(f"Skipping unsupported/malformed share link: {type(exc).__name__}")
-    print(f"Parsed {len(parsed)} unique SS/VLESS/VMess candidates; testing real HTTPS proxy traffic")
+    print(f"Parsed {len(parsed)} unique candidates; resolving endpoint countries")
+    located = []
+    for outbound, host, port, link in parsed:
+        country = country_code(host)
+        located.append((outbound, host, port, link, country))
+        print(f"GEO {country} {host}:{port}")
+    located.sort(key=lambda item: (geo_rank(item[4]), item[4] != "DE", item[1]))
+    print("Testing real HTTPS traffic; German endpoints are ranked first, then Europe, then other regions")
     verified = []
-    for index, (outbound, host, port, link) in enumerate(parsed, 1):
+    for index, (outbound, host, port, link, country) in enumerate(located, 1):
         latency = real_proxy_check(xray_bin, outbound)
         if latency is not None:
-            verified.append((outbound, host, port, latency, link))
-            print(f"PASS {index}/{len(parsed)} {host}:{port} HTTPS={latency}ms")
+            verified.append((outbound, host, port, latency, link, country))
+            print(f"PASS {index}/{len(located)} {country} {host}:{port} HTTPS={latency}ms")
         else:
-            print(f"FAIL {index}/{len(parsed)} {host}:{port}")
-        if len(verified) >= MAX_NODES:
-            break
-    verified.sort(key=lambda item: item[3])
-    if not verified:
+            print(f"FAIL {index}/{len(located)} {country} {host}:{port}")
+    verified.sort(key=lambda item: (geo_rank(item[5]), item[3]))
+    selected = verified[:MAX_NODES]
+    if not selected:
         raise SystemExit("No node passed a real proxied HTTPS request; preserving existing config")
-    build_config(verified)
-    print(f"RESULT: published {len(verified)} nodes that completed a proxied HTTPS request.")
+    germany_count = sum(1 for item in selected if item[5] == "DE")
+    europe_count = sum(1 for item in selected if item[5] in EUROPE_COUNTRIES)
+    build_config(selected)
+    print(f"RESULT: published {len(selected)} HTTPS-verified nodes; Germany={germany_count}, Europe={europe_count}.")
+    if germany_count == 0:
+        print("WARNING: no verified German endpoint found in current public sources; European fallbacks are ranked first.")
     print("UDP, long-term availability, and operator privacy are not verified.")
 
 
