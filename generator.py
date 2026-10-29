@@ -175,8 +175,11 @@ def parse_link(link):
         stream = result[0].get("streamSettings", {})
         security = stream.get("security")
         if security == "tls":
-            if not stream.get("tlsSettings", {}).get("serverName"):
+            tls = stream.get("tlsSettings", {})
+            if not tls.get("serverName"):
                 raise ValueError("TLS server name is required")
+            if query.get("allowInsecure", ["false"])[0].lower() in ("1", "true", "yes"):
+                raise ValueError("TLS certificate verification cannot be disabled")
         elif security == "reality":
             reality = stream.get("realitySettings", {})
             if not reality.get("serverName") or not reality.get("publicKey") or not reality.get("shortId"):
@@ -185,11 +188,7 @@ def parse_link(link):
             raise ValueError("VLESS without authenticated TLS/Reality is rejected")
         return result
     if link.startswith("vmess://"):
-        result = parse_vmess(link)
-        stream = result[0].get("streamSettings", {})
-        if stream.get("security") != "tls" or not stream.get("tlsSettings", {}).get("serverName"):
-            raise ValueError("VMess without TLS is rejected")
-        return result
+        raise ValueError("VMess is excluded from the strict mobile pool; use VLESS TLS/Reality or AEAD Shadowsocks")
     raise ValueError("unsupported scheme")
 
 
@@ -302,12 +301,17 @@ def build_config(candidates):
     routing = {"domainStrategy": "AsIs", "rules": rules}
     if outbounds[:-2]:
         routing["balancers"] = [{"tag": "free-node-balancer", "selector": ["node_"],
-                                 "strategy": {"type": "roundRobin"}}]
+                                 "strategy": {"type": "leastPing",
+                                              "settings": {"expected": 2, "maxRTT": 1500,
+                                                           "tolerance": 0}}}]
         rules.append({"type": "field", "network": "tcp,udp",
                       "balancerTag": "free-node-balancer"})
     config = {"remarks": f"Germany Strict Security ({len(candidates)} verified nodes)",
               "log": {"loglevel": "warning"}, "stats": {},
               "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
+              "observatory": {"subjectSelector": ["node_"],
+                              "probeURL": "https://www.gstatic.com/generate_204",
+                              "probeInterval": "5m"},
               "inbounds": [
                   {"tag": "socks-in", "port": 10808, "listen": "127.0.0.1", "protocol": "socks",
                    "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
