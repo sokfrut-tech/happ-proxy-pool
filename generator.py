@@ -329,10 +329,18 @@ def build_config(candidates):
     with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
         file.write("\n")
-    with open("happ_subscription.txt", "w", encoding="utf-8") as file:
-        file.write("#profile-title: Germany Strict Security\n")
-        for _outbound, _host, _port, _latency, link, _country in candidates:
-            file.write(link + "\n")
+    def write_subscription(path, title, group):
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(f"#profile-title: {title}\\n")
+            file.write("# MOBILE/HOME are separate trial buckets, not network-specific validation.\\n")
+            for _outbound, _host, _port, _latency, link, _country in group:
+                file.write(link + "\\n")
+
+    # Alternate latency-ranked candidates to balance the two trial lists.
+    mobile_group = candidates[::2]
+    home_group = candidates[1::2]
+    write_subscription("happ_mobile.txt", "DE MOBILE TEST", mobile_group)
+    write_subscription("happ_home.txt", "DE HOME WIFI TEST", home_group)
 
 
 def main():
