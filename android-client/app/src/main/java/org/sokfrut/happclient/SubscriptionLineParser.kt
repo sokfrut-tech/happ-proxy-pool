@@ -1,5 +1,8 @@
 package org.sokfrut.happclient
 
+import java.net.URI
+import java.util.Base64
+
 data class ParseSummary(
     val supportedCount: Int,
     val rejectedCount: Int,
@@ -7,7 +10,7 @@ data class ParseSummary(
 )
 
 object SubscriptionLineParser {
-    private val supportedSchemes = setOf("vless", "vmess", "trojan", "ss", "socks", "socks5")
+    private val uriSchemes = setOf("vless", "trojan", "ss", "socks", "socks5")
 
     fun parse(text: String): ParseSummary {
         var supported = 0
@@ -16,15 +19,29 @@ object SubscriptionLineParser {
             .map(String::trim)
             .filter { it.isNotEmpty() && !it.startsWith("#") }
             .forEach { line ->
-                val scheme = line.substringBefore("://", missingDelimiterValue = "")
-                    .lowercase()
-                val hasPayload = line.substringAfter("://", "").isNotBlank()
-                if (scheme in supportedSchemes && hasPayload) supported++ else rejected++
+                if (isSupportedProxyUri(line)) supported++ else rejected++
             }
         return ParseSummary(
             supportedCount = supported,
             rejectedCount = rejected,
             safeSummary = "Поддерживаемых строк: $supported; отклонено: $rejected"
         )
+    }
+
+    private fun isSupportedProxyUri(line: String): Boolean {
+        val scheme = line.substringBefore("://", missingDelimiterValue = "").lowercase()
+        if (scheme == "vmess") {
+            val payload = line.substringAfter("://", "").substringBefore('#')
+            return runCatching {
+                val normalized = payload.replace('-', '+').replace('_', '/')
+                val decoded = Base64.getDecoder().decode(normalized).toString(Charsets.UTF_8)
+                decoded.trimStart().startsWith("{") && decoded.contains("\"add\"")
+            }.getOrDefault(false)
+        }
+        if (scheme !in uriSchemes) return false
+        return runCatching {
+            val uri = URI(line)
+            !uri.host.isNullOrBlank() && uri.port in 1..65535
+        }.getOrDefault(false)
     }
 }
