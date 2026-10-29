@@ -8,15 +8,19 @@ or continuing availability. Public nodes are untrusted.
 import base64
 import concurrent.futures
 import json
+import os
+import shutil
 import socket
+import subprocess
+import tempfile
 import time
 import urllib.parse
 import urllib.request
 
 OUTPUT_FILE = "happ_config.json"
-SOURCES = ["https://raw.githubusercontent.com/freefq/free/master/v2"]
+SOURCES = ["https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt", "https://raw.githubusercontent.com/freefq/free/master/v2"]
 MAX_NODES = 10
-MAX_CANDIDATES = 150
+MAX_CANDIDATES = 80
 CONNECT_TIMEOUT = 3
 USER_AGENT = "HappFreeNodePool/1.0"
 
@@ -204,13 +208,58 @@ def parse_link(link):
     raise ValueError("unsupported scheme")
 
 
-def tcp_reachable(host, port):
-    started = time.monotonic()
-    try:
-        with socket.create_connection((host, port), timeout=CONNECT_TIMEOUT):
-            return round((time.monotonic() - started) * 1000)
-    except OSError:
-        return None
+def real_proxy_check(xray_bin, outbound):
+    """Require a real HTTPS request through an isolated Xray SOCKS inbound."""
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        local_port = sock.getsockname()[1]
+    probe = {
+        "log": {"loglevel": "error"},
+        "inbounds": [{"listen": "127.0.0.1", "port": local_port,
+                      "protocol": "socks", "settings": {"auth": "noauth", "udp": False}}],
+        "outbounds": [outbound],
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        config_path = os.path.join(tmp, "probe.json")
+        with open(config_path, "w", encoding="utf-8") as handle:
+            json.dump(probe, handle)
+        try:
+            proc = subprocess.Popen([xray_bin, "run", "-c", config_path],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except OSError:
+            return None
+        try:
+            ready = False
+            for _ in range(20):
+                if proc.poll() is not None:
+                    return None
+                try:
+                    with socket.create_connection(("127.0.0.1", local_port), timeout=0.2):
+                        ready = True
+                        break
+                except OSError:
+                    time.sleep(0.15)
+            if not ready:
+                return None
+            started = time.monotonic()
+            result = subprocess.run(
+                ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "3",
+                 "--max-time", "7", "--socks5-hostname", f"127.0.0.1:{local_port}",
+                 "https://www.cloudflare.com/cdn-cgi/trace"],
+                capture_output=True, text=True, timeout=9)
+            elapsed = round((time.monotonic() - started) * 1000)
+            if result.returncode == 0 and "ip=" in result.stdout and "http=" in result.stdout:
+                return elapsed
+            return None
+        except (subprocess.TimeoutExpired, OSError):
+            return None
+        finally:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=2)
 
 
 def build_config(candidates):
@@ -246,7 +295,7 @@ def build_config(candidates):
         })
 
     config = {
-        "remarks": f"GitHub Free Encrypted Pool ({len(candidates)} TCP-reachable nodes)",
+        "remarks": f"GitHub Free Encrypted Pool ({len(candidates)} HTTPS-verified nodes)",
         "log": {"loglevel": "warning"},
         "stats": {},
         "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
@@ -272,35 +321,41 @@ def build_config(candidates):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--xray", default=os.environ.get("XRAY_BIN", "xray"))
+    args = parser.parse_args()
+    xray_bin = shutil.which(args.xray) or (args.xray if os.path.isfile(args.xray) else None)
+    if not xray_bin:
+        raise SystemExit("Xray binary not found; refusing TCP-only publication")
     links = fetch_links()
-    parsed = []
+    parsed, seen = [], set()
     for link in links:
         try:
             outbound, host, port = parse_link(link)
-            parsed.append((outbound, host, port, None))
+            key = json.dumps(outbound, sort_keys=True, separators=(",", ":"))
+            if key not in seen:
+                seen.add(key)
+                parsed.append((outbound, host, port))
         except Exception as exc:
-            print(f"Skipping malformed share link: {type(exc).__name__}")
-
-    print(f"Parsed {len(parsed)} protocol configurations; testing TCP endpoints")
-    reachable = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as pool:
-        jobs = {
-            pool.submit(tcp_reachable, host, port): (outbound, host, port)
-            for outbound, host, port, _ in parsed
-        }
-        for future in concurrent.futures.as_completed(jobs):
-            outbound, host, port = jobs[future]
-            latency = future.result()
-            if latency is not None:
-                reachable.append((outbound, host, port, latency))
-
-    reachable.sort(key=lambda item: item[3])
-    selected = reachable[:MAX_NODES]
-    build_config(selected)
-    print(
-        f"RESULT: {len(selected)} nodes have open TCP ports. "
-        "VPN handshake, end-to-end traffic, UDP and privacy are NOT verified."
-    )
+            print(f"Skipping unsupported/malformed share link: {type(exc).__name__}")
+    print(f"Parsed {len(parsed)} unique SS/VLESS/VMess candidates; testing real HTTPS proxy traffic")
+    verified = []
+    for index, (outbound, host, port) in enumerate(parsed, 1):
+        latency = real_proxy_check(xray_bin, outbound)
+        if latency is not None:
+            verified.append((outbound, host, port, latency))
+            print(f"PASS {index}/{len(parsed)} {host}:{port} HTTPS={latency}ms")
+        else:
+            print(f"FAIL {index}/{len(parsed)} {host}:{port}")
+        if len(verified) >= MAX_NODES:
+            break
+    verified.sort(key=lambda item: item[3])
+    if not verified:
+        raise SystemExit("No node passed a real proxied HTTPS request; preserving existing config")
+    build_config(verified)
+    print(f"RESULT: published {len(verified)} nodes that completed a proxied HTTPS request.")
+    print("UDP, long-term availability, and operator privacy are not verified.")
 
 
 if __name__ == "__main__":
