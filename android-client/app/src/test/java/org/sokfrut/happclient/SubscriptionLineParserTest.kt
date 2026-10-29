@@ -8,7 +8,7 @@ class SubscriptionLineParserTest {
     @Test fun recognizesSupportedSchemesWithoutExposingCredentials() {
         val lines = listOf(
             "vless://secret@example.org:443?security=reality#node",
-            "vmess://eyJ2IjoiMiJ9",
+            "vmess://eyJhZGQiOiJleGFtcGxlLm9yZyIsInBvcnQiOiI0NDMifQ==",
             "trojan://secret@example.org:443#node",
             "ss://YWVzLTI1Ni1nY206cGFzcw@example.org:8388#node",
             "socks://user:secret@example.org:1080"
