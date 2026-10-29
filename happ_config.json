@@ -1,0 +1,195 @@
+{
+  "remarks": "GitHub Auto-Pool (8 tested HTTPS nodes)",
+  "log": {
+    "loglevel": "warning"
+  },
+  "dns": {
+    "servers": [
+      "tcp://1.1.1.1:53",
+      "tcp://8.8.8.8:53"
+    ],
+    "queryStrategy": "UseIPv4"
+  },
+  "inbounds": [
+    {
+      "tag": "socks-in",
+      "port": 10808,
+      "listen": "127.0.0.1",
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      }
+    },
+    {
+      "tag": "http-in",
+      "port": 10809,
+      "listen": "127.0.0.1",
+      "protocol": "http",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy_1_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "34.43.46.91",
+            "port": 443
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_2_EC",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "181.188.203.112",
+            "port": 999
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_3_TH",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "182.52.136.39",
+            "port": 80
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_4_NL",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "145.220.227.144",
+            "port": 1081
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_5_ID",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "103.195.65.199",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_6_PH",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "180.190.24.49",
+            "port": 8082
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_7_TR",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "79.98.32.68",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_8_IT",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "185.191.106.41",
+            "port": 8081
+          }
+        ]
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom"
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "network": "udp",
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "network": "tcp",
+        "balancerTag": "auto-balancer"
+      }
+    ],
+    "balancers": [
+      {
+        "tag": "auto-balancer",
+        "selector": [
+          "proxy_"
+        ],
+        "strategy": {
+          "type": "leastPing"
+        }
+      }
+    ]
+  },
+  "burstObservatory": {
+    "subjectSelector": [
+      "proxy_"
+    ],
+    "pingConfig": {
+      "destination": "https://www.cloudflare.com/cdn-cgi/trace",
+      "interval": "30s",
+      "sampling": 3,
+      "timeout": "5s"
+    }
+  }
+}
