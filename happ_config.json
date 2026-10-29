@@ -1,5 +1,5 @@
 {
-  "remarks": "GitHub Auto-Pool (8 tested HTTPS nodes)",
+  "remarks": "GitHub Auto-Pool (15 HTTPS-tested nodes)",
   "log": {
     "loglevel": "warning"
   },
@@ -44,19 +44,151 @@
   ],
   "outbounds": [
     {
-      "tag": "proxy_1_US",
+      "tag": "proxy_1_DE",
       "protocol": "http",
       "settings": {
         "servers": [
           {
-            "address": "34.43.46.91",
-            "port": 443
+            "address": "103.237.102.191",
+            "port": 11111
           }
         ]
       }
     },
     {
-      "tag": "proxy_2_EC",
+      "tag": "proxy_2_DE",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "161.35.70.249",
+            "port": 80
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_3_DE",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "116.204.166.153",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_4_MX",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "82.152.138.127",
+            "port": 999
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_5_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "138.68.60.8",
+            "port": 3128
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_6_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "47.254.36.25",
+            "port": 11080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_7_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "104.244.95.184",
+            "port": 1088
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_8_CA",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "159.203.61.169",
+            "port": 3128
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_9_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "130.127.204.197",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_10_US",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "34.43.46.91",
+            "port": 80
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_11_GB",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "134.209.29.120",
+            "port": 3128
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_12_JP",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "139.162.78.109",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "tag": "proxy_13_EC",
       "protocol": "http",
       "settings": {
         "servers": [
@@ -68,73 +200,25 @@
       }
     },
     {
-      "tag": "proxy_3_TH",
+      "tag": "proxy_14_NL",
       "protocol": "http",
       "settings": {
         "servers": [
           {
-            "address": "182.52.136.39",
-            "port": 80
+            "address": "51.15.20.32",
+            "port": 3129
           }
         ]
       }
     },
     {
-      "tag": "proxy_4_NL",
+      "tag": "proxy_15_US",
       "protocol": "http",
       "settings": {
         "servers": [
           {
-            "address": "145.220.227.144",
-            "port": 1081
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_5_ID",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "103.195.65.199",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_6_PH",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "180.190.24.49",
-            "port": 8082
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_7_TR",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "79.98.32.68",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_8_IT",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "185.191.106.41",
-            "port": 8081
+            "address": "34.43.46.91",
+            "port": 443
           }
         ]
       }
@@ -187,9 +271,9 @@
     ],
     "pingConfig": {
       "destination": "https://www.cloudflare.com/cdn-cgi/trace",
-      "interval": "30s",
-      "sampling": 3,
-      "timeout": "5s"
+      "interval": "15s",
+      "sampling": 2,
+      "timeout": "3s"
     }
   }
 }
