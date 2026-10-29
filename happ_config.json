@@ -49,7 +49,7 @@
       "settings": {
         "servers": [
           {
-            "address": "37.19.198.244",
+            "address": "156.146.38.168",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -63,7 +63,7 @@
       "settings": {
         "servers": [
           {
-            "address": "37.19.198.243",
+            "address": "156.146.38.169",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -77,7 +77,7 @@
       "settings": {
         "servers": [
           {
-            "address": "37.19.198.160",
+            "address": "156.146.38.167",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -91,7 +91,7 @@
       "settings": {
         "servers": [
           {
-            "address": "37.19.198.236",
+            "address": "156.146.38.170",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -105,11 +105,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "47.253.226.114",
-            "port": 443,
+            "address": "31.172.69.31",
+            "port": 8443,
             "users": [
               {
-                "id": "055a1ce8-2a16-4a0d-a2c2-22826c9b2413",
+                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
                 "encryption": "none",
                 "flow": "xtls-rprx-vision"
               }
@@ -121,52 +121,82 @@
         "network": "tcp",
         "security": "reality",
         "realitySettings": {
-          "serverName": "www.cloudflare.com",
-          "fingerprint": "chrome",
-          "publicKey": "Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc",
-          "shortId": ""
+          "serverName": "www.samsung.com",
+          "fingerprint": "qq",
+          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
+          "shortId": "a4e32c324d86cfdf"
         }
       }
     },
     {
       "tag": "node_6",
-      "protocol": "vless",
+      "protocol": "shadowsocks",
       "settings": {
-        "vnext": [
+        "servers": [
           {
-            "address": "38.60.206.51",
-            "port": 54857,
-            "users": [
-              {
-                "id": "e9a8144e-5237-488a-afb1-9ca3d8d54c80",
-                "encryption": "none"
-              }
-            ]
+            "address": "37.19.198.236",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
           }
         ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "us001.zestapp778.com",
-          "fingerprint": "firefox"
-        }
       }
     },
     {
       "tag": "node_7",
-      "protocol": "vless",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "37.19.198.244",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_8",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "37.19.198.243",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_9",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "37.19.198.160",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_10",
+      "protocol": "vmess",
       "settings": {
         "vnext": [
           {
-            "address": "159.89.87.21",
-            "port": 28190,
+            "address": "134.195.196.211",
+            "port": 18000,
             "users": [
               {
-                "id": "14c80e0e-f7ce-4991-94fc-99a1db4a9b1e",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
+                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
+                "alterId": 0,
+                "security": "auto"
               }
             ]
           }
@@ -174,100 +204,7 @@
       },
       "streamSettings": {
         "network": "raw",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "aws.amazon.com",
-          "fingerprint": "firefox",
-          "publicKey": "ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno",
-          "shortId": ""
-        }
-      }
-    },
-    {
-      "tag": "node_8",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "195.123.235.183",
-            "port": 443,
-            "users": [
-              {
-                "id": "c14ec728-3eca-4750-87fc-fd1e6aeb81d5",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "gateway.icloud.com",
-          "fingerprint": "chrome",
-          "publicKey": "H3R3BUAl7thrIZsznTbb-eRREIjQOH2f3WO0oTN7OGY",
-          "shortId": "a0e2a6074c6456b0"
-        }
-      }
-    },
-    {
-      "tag": "node_9",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "195.123.235.183",
-            "port": 443,
-            "users": [
-              {
-                "id": "c14ec728-3eca-4750-87fc-fd1e6aeb81d5",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "gateway.icloud.com",
-          "fingerprint": "random",
-          "publicKey": "H3R3BUAl7thrIZsznTbb-eRREIjQOH2f3WO0oTN7OGY",
-          "shortId": "a0e2a6074c6456b0"
-        }
-      }
-    },
-    {
-      "tag": "node_10",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "185.95.231.156",
-            "port": 443,
-            "users": [
-              {
-                "id": "1f8cf47a-b66a-4916-979f-26edfcf44eea",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "www.apple.com",
-          "fingerprint": "random",
-          "publicKey": "8eXftARun6KH38UZhuqIfPR1VF2DLS9RMBZEnF5k6To",
-          "shortId": "a3a578ab"
-        }
+        "security": "none"
       }
     },
     {
