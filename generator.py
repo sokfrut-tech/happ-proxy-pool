@@ -264,7 +264,7 @@ def real_proxy_check(xray_bin, outbound):
 
 def build_config(candidates):
     outbounds = []
-    for index, (outbound, _host, _port, _latency) in enumerate(candidates, 1):
+    for index, (outbound, _host, _port, _latency, _link) in enumerate(candidates, 1):
         outbound["tag"] = f"node_{index}"
         outbounds.append(outbound)
 
@@ -321,7 +321,14 @@ def build_config(candidates):
     }
     with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
-        file.write("\n")
+        file.write("\\n")
+
+    # Happ mobile subscriptions should be share-link lists, not a full Xray
+    # core config with localhost inbounds that bypasses Happ's TUN setup.
+    with open("happ_subscription.txt", "w", encoding="utf-8") as file:
+        file.write("#profile-title: Free Verified Pool\\n")
+        for _outbound, _host, _port, _latency, link in candidates:
+            file.write(link + "\\n")
 
 
 def main():
@@ -340,15 +347,15 @@ def main():
             key = json.dumps(outbound, sort_keys=True, separators=(",", ":"))
             if key not in seen:
                 seen.add(key)
-                parsed.append((outbound, host, port))
+                parsed.append((outbound, host, port, link))
         except Exception as exc:
             print(f"Skipping unsupported/malformed share link: {type(exc).__name__}")
     print(f"Parsed {len(parsed)} unique SS/VLESS/VMess candidates; testing real HTTPS proxy traffic")
     verified = []
-    for index, (outbound, host, port) in enumerate(parsed, 1):
+    for index, (outbound, host, port, link) in enumerate(parsed, 1):
         latency = real_proxy_check(xray_bin, outbound)
         if latency is not None:
-            verified.append((outbound, host, port, latency))
+            verified.append((outbound, host, port, latency, link))
             print(f"PASS {index}/{len(parsed)} {host}:{port} HTTPS={latency}ms")
         else:
             print(f"FAIL {index}/{len(parsed)} {host}:{port}")
