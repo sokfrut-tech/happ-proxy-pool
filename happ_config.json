@@ -1,5 +1,5 @@
 {
-  "remarks": "GitHub Free Encrypted Pool (3 TCP-reachable nodes)",
+  "remarks": "GitHub Free Encrypted Pool (10 HTTPS-verified nodes)",
   "log": {
     "loglevel": "warning"
   },
@@ -49,11 +49,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "104.21.82.183",
-            "port": 8880,
+            "address": "23.162.200.198",
+            "port": 18000,
             "users": [
               {
-                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
+                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -62,47 +62,22 @@
         ]
       },
       "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/",
-          "headers": {
-            "Host": "server26.beheshtbaneh.com"
-          }
-        }
+        "network": "raw",
+        "security": "none"
       }
     },
     {
       "tag": "node_2",
-      "protocol": "vmess",
+      "protocol": "shadowsocks",
       "settings": {
-        "vnext": [
+        "servers": [
           {
-            "address": "gov.uk",
+            "address": "216.128.153.186",
             "port": 443,
-            "users": [
-              {
-                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
+            "method": "chacha20-ietf-poly1305",
+            "password": "gWXhRbGoI53aSRV8fv9alMwr"
           }
         ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "zheshiscp.com",
-          "fingerprint": "chrome"
-        },
-        "wsSettings": {
-          "path": "/77848824",
-          "headers": {
-            "Host": "zheshiscp.com"
-          }
-        }
       }
     },
     {
@@ -111,11 +86,48 @@
       "settings": {
         "vnext": [
           {
-            "address": "www.darkroom.lol",
-            "port": 8080,
+            "address": "23.162.200.198",
+            "port": 18000,
             "users": [
               {
-                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
+                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none"
+      }
+    },
+    {
+      "tag": "node_4",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.167",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_5",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "172.67.187.145",
+            "port": 80,
+            "users": [
+              {
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -127,10 +139,125 @@
         "network": "ws",
         "security": "none",
         "wsSettings": {
-          "path": "/",
+          "path": "/ws?ed=2048",
           "headers": {
-            "Host": "www.darkroom.lol"
+            "Host": "vmess.lbw666.dpdns.org"
           }
+        }
+      }
+    },
+    {
+      "tag": "node_6",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.168",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_7",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.169",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_8",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "195.211.98.43",
+            "port": 443,
+            "users": [
+              {
+                "id": "1b4b11d5-4c2d-4533-9a55-636757cdee94",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.cloudflare.com",
+          "fingerprint": "firefox",
+          "publicKey": "xPnpkXu5qfwIArlHKvJsqKJnGdGbJK1tT2GzWMyLohA",
+          "shortId": "9c56fddf237e8eaf"
+        }
+      }
+    },
+    {
+      "tag": "node_9",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "104.21.7.133",
+            "port": 80,
+            "users": [
+              {
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/ws?ed=2048",
+          "headers": {
+            "Host": "vmess.lbw666.dpdns.org"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_10",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "31.172.69.31",
+            "port": 8443,
+            "users": [
+              {
+                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.samsung.com",
+          "fingerprint": "qq",
+          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
+          "shortId": "a4e32c324d86cfdf"
         }
       }
     },
@@ -149,7 +276,14 @@
       {
         "type": "field",
         "ip": [
-          "geoip:private"
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "127.0.0.0/8",
+          "169.254.0.0/16",
+          "::1/128",
+          "fc00::/7",
+          "fe80::/10"
         ],
         "outboundTag": "direct"
       },
