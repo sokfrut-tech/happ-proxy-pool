@@ -331,7 +331,7 @@ def build_config(candidates):
                       "balancerTag": "free-node-balancer"})
     config = {"remarks": f"Germany Strict Security ({len(candidates)} verified nodes)",
               "log": {"loglevel": "warning"}, "stats": {},
-              "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
+              "dns": {"servers": ["https://dns.dagami.ru/dns-query", "https://d.webshiftvpn.ru/dns-query", "https://dns.malw.link/dns-query", "https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
               "observatory": {"subjectSelector": ["node_"],
                               "probeURL": "https://www.gstatic.com/generate_204",
                               "probeInterval": "5m"},
