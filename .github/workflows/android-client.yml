@@ -1,0 +1,43 @@
+name: Android client prototype
+on:
+  push:
+    branches:
+      - feature/happ-compatible-android-client
+  pull_request:
+    branches:
+      - main
+      - prototype/xray-real-checks
+      - feature/happ-compatible-android-client
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Unit tests
+        run: gradle testDebugUnitTest
+      - name: Build debug APK
+        run: gradle assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: happ-compatible-debug
+          path: android-client/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
