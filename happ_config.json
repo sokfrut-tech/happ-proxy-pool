@@ -49,7 +49,7 @@
       "settings": {
         "servers": [
           {
-            "address": "156.146.38.168",
+            "address": "156.146.38.167",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -63,7 +63,21 @@
       "settings": {
         "servers": [
           {
-            "address": "156.146.38.170",
+            "address": "216.128.153.186",
+            "port": 443,
+            "method": "chacha20-ietf-poly1305",
+            "password": "gWXhRbGoI53aSRV8fv9alMwr"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_3",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.168",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -72,41 +86,12 @@
       }
     },
     {
-      "tag": "node_3",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "104.17.147.222",
-            "port": 80,
-            "users": [
-              {
-                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/ws?ed=2048",
-          "headers": {
-            "Host": "vmess.lbw666.dpdns.org"
-          }
-        }
-      }
-    },
-    {
       "tag": "node_4",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
           {
-            "address": "156.146.38.167",
+            "address": "156.146.38.170",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -130,6 +115,58 @@
     },
     {
       "tag": "node_6",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "134.195.196.211",
+            "port": 18000,
+            "users": [
+              {
+                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none"
+      }
+    },
+    {
+      "tag": "node_7",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "104.21.7.133",
+            "port": 80,
+            "users": [
+              {
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/ws?ed=2048",
+          "headers": {
+            "Host": "vmess.lbw666.dpdns.org"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_8",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -158,45 +195,12 @@
       }
     },
     {
-      "tag": "node_7",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "104.17.136.198",
-            "port": 443,
-            "users": [
-              {
-                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "vmess.lbw666.dpdns.org",
-          "fingerprint": "chrome"
-        },
-        "wsSettings": {
-          "path": "/ws?ed=2048",
-          "headers": {
-            "Host": "vmess.lbw666.dpdns.org"
-          }
-        }
-      }
-    },
-    {
-      "tag": "node_8",
+      "tag": "node_9",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
           {
-            "address": "37.19.198.236",
+            "address": "37.19.198.160",
             "port": 443,
             "method": "aes-128-gcm",
             "password": "shadowsocks"
@@ -205,12 +209,12 @@
       }
     },
     {
-      "tag": "node_9",
+      "tag": "node_10",
       "protocol": "vmess",
       "settings": {
         "vnext": [
           {
-            "address": "172.67.187.145",
+            "address": "104.17.147.222",
             "port": 80,
             "users": [
               {
@@ -231,20 +235,6 @@
             "Host": "vmess.lbw666.dpdns.org"
           }
         }
-      }
-    },
-    {
-      "tag": "node_10",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "37.19.198.160",
-            "port": 443,
-            "method": "aes-128-gcm",
-            "password": "shadowsocks"
-          }
-        ]
       }
     },
     {
