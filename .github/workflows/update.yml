@@ -3,6 +3,8 @@ name: Update Happ Proxy Pool
 on:
   push:
     branches: ["main", "prototype/xray-real-checks"]
+  pull_request:
+    branches: ["main"]
   schedule:
     - cron: "15 * * * *"
   workflow_dispatch:
