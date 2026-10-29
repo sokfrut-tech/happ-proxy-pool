@@ -49,16 +49,30 @@
       "settings": {
         "servers": [
           {
-            "address": "216.128.153.186",
+            "address": "156.146.38.168",
             "port": 443,
-            "method": "chacha20-ietf-poly1305",
-            "password": "gWXhRbGoI53aSRV8fv9alMwr"
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
           }
         ]
       }
     },
     {
       "tag": "node_2",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "156.146.38.167",
+            "port": 443,
+            "method": "aes-128-gcm",
+            "password": "shadowsocks"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "node_3",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
@@ -72,55 +86,32 @@
       }
     },
     {
-      "tag": "node_3",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "172.67.187.145",
-            "port": 80,
-            "users": [
-              {
-                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/ws?ed=2048",
-          "headers": {
-            "Host": "vmess.lbw666.dpdns.org"
-          }
-        }
-      }
-    },
-    {
       "tag": "node_4",
-      "protocol": "vmess",
+      "protocol": "vless",
       "settings": {
         "vnext": [
           {
-            "address": "23.162.200.198",
-            "port": 18000,
+            "address": "31.172.69.31",
+            "port": 8443,
             "users": [
               {
-                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
-                "alterId": 0,
-                "security": "auto"
+                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
               }
             ]
           }
         ]
       },
       "streamSettings": {
-        "network": "raw",
-        "security": "none"
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.samsung.com",
+          "fingerprint": "qq",
+          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
+          "shortId": "a4e32c324d86cfdf"
+        }
       }
     },
     {
@@ -154,43 +145,15 @@
     },
     {
       "tag": "node_6",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "156.146.38.168",
-            "port": 443,
-            "method": "aes-128-gcm",
-            "password": "shadowsocks"
-          }
-        ]
-      }
-    },
-    {
-      "tag": "node_7",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "156.146.38.167",
-            "port": 443,
-            "method": "aes-128-gcm",
-            "password": "shadowsocks"
-          }
-        ]
-      }
-    },
-    {
-      "tag": "node_8",
       "protocol": "vmess",
       "settings": {
         "vnext": [
           {
-            "address": "23.162.200.198",
-            "port": 18000,
+            "address": "104.17.147.222",
+            "port": 80,
             "users": [
               {
-                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -199,8 +162,57 @@
         ]
       },
       "streamSettings": {
-        "network": "tcp",
-        "security": "none"
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/ws?ed=2048",
+          "headers": {
+            "Host": "vmess.lbw666.dpdns.org"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_7",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "172.67.187.145",
+            "port": 80,
+            "users": [
+              {
+                "id": "0cf6d970-3f1d-4aae-a989-92a8f76ae3db",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/ws?ed=2048",
+          "headers": {
+            "Host": "vmess.lbw666.dpdns.org"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_8",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "216.128.153.186",
+            "port": 443,
+            "method": "chacha20-ietf-poly1305",
+            "password": "gWXhRbGoI53aSRV8fv9alMwr"
+          }
+        ]
       }
     },
     {
@@ -234,31 +246,25 @@
     },
     {
       "tag": "node_10",
-      "protocol": "vless",
+      "protocol": "vmess",
       "settings": {
         "vnext": [
           {
-            "address": "31.172.69.31",
-            "port": 8443,
+            "address": "23.162.200.198",
+            "port": 18000,
             "users": [
               {
-                "id": "9c6e83fc-b755-4ad4-9b0a-14b610153d8f",
-                "encryption": "none",
-                "flow": "xtls-rprx-vision"
+                "id": "f8c8dc3d-0d37-46b0-8b34-a7232882fcfe",
+                "alterId": 0,
+                "security": "auto"
               }
             ]
           }
         ]
       },
       "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "serverName": "www.samsung.com",
-          "fingerprint": "qq",
-          "publicKey": "H43_itYl9CE0AJiCktUfriENFmixY_MTHgX8slCrN2Q",
-          "shortId": "a4e32c324d86cfdf"
-        }
+        "network": "raw",
+        "security": "none"
       }
     },
     {
