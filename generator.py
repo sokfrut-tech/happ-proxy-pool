@@ -273,7 +273,11 @@ def build_config(candidates):
         {"tag": "block", "protocol": "blackhole"},
     ])
     rules = [
-        {"type": "field", "ip": ["geoip:private"], "outboundTag": "direct"},
+        {
+            "type": "field",
+            "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8", "169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10"],
+            "outboundTag": "direct",
+        },
     ]
     routing = {"domainStrategy": "AsIs", "rules": rules}
     if outbounds[:-2]:
