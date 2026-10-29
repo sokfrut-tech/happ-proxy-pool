@@ -18,12 +18,12 @@ import urllib.parse
 import urllib.request
 
 OUTPUT_FILE = "happ_config.json"
-SOURCES = ["https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt", "https://raw.githubusercontent.com/freefq/free/master/v2"]
+SOURCES = ["https://radarhub.top/by-country/germany.txt", "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt", "https://raw.githubusercontent.com/freefq/free/master/v2"]
 MAX_NODES = 10
-MAX_CANDIDATES = 80
+MAX_CANDIDATES = 120
 CONNECT_TIMEOUT = 3
 USER_AGENT = "HappFreeNodePool/1.0"
-# Germany first; nearby European countries are fallbacks before overseas nodes.
+# Only verified German VPN exits are published; no overseas fallback.
 EUROPE_COUNTRIES = {
     "DE", "AT", "CH", "NL", "BE", "LU", "FR", "PL", "CZ", "DK",
     "SE", "NO", "FI", "IT", "ES", "PT", "GB", "IE", "EE", "LV",
@@ -329,15 +329,16 @@ def main():
         else:
             print(f"FAIL {index}/{len(located)} {country} {host}:{port}")
     verified.sort(key=lambda item: (geo_rank(item[5]), item[3]))
-    selected = verified[:MAX_NODES]
+    german_verified = [item for item in verified if item[5] == "DE"]
+    selected = german_verified[:MAX_NODES]
     if not selected:
-        raise SystemExit("No node passed a real proxied HTTPS request; preserving existing config")
+        raise SystemExit("No verified German VPN exit found; preserving existing German subscription")
     germany_count = sum(1 for item in selected if item[5] == "DE")
     europe_count = sum(1 for item in selected if item[5] in EUROPE_COUNTRIES)
     build_config(selected)
     print(f"RESULT: published {len(selected)} HTTPS-verified nodes; Germany={germany_count}, Europe={europe_count}.")
-    if germany_count == 0:
-        print("WARNING: no verified German VPN exit found in current public sources; no German node can be claimed.")
+    if germany_count != len(selected):
+        raise SystemExit("Safety check failed: non-German node would be published.")
     print("UDP, long-term availability, and operator privacy are not verified.")
 
 
