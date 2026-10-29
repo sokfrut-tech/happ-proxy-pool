@@ -33,14 +33,26 @@ jobs:
       - name: Validate generated JSON
         run: python3 -m json.tool happ_config.json > /dev/null
 
-      - name: Commit updated pool
+      - name: Commit updated pool safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add happ_config.json
-          if git diff --cached --quiet; then
-            echo "No changes in proxy pool."
-            exit 0
-          fi
-          git commit -m "Update Happ proxy pool [skip ci]"
-          git push
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 generator.py
+            python3 -m json.tool happ_config.json > /dev/null
+            git add happ_config.json
+            if git diff --cached --quiet; then
+              echo "No changes in proxy pool."
+              exit 0
+            fi
+            git commit -m "Update Happ proxy pool [skip ci]"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push race on attempt $attempt; retrying from latest main."
+            sleep 2
+          done
+          echo "Could not publish proxy pool after 3 attempts."
+          exit 1
