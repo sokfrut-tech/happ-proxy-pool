@@ -23,7 +23,7 @@ MAX_NODES = 10
 MAX_CANDIDATES = 120
 CHECK_WORKERS = 12
 CONNECT_TIMEOUT = 3
-USER_AGENT = "HappFreeNodePool/1.1"
+USER_AGENT = "HappFreeNodePool/1.2"
 # Only verified German VPN exits are published; no overseas fallback.
 EUROPE_COUNTRIES = {
     "DE", "AT", "CH", "NL", "BE", "LU", "FR", "PL", "CZ", "DK",
