@@ -1,15 +1,14 @@
 {
-  "remarks": "Safe Auto-Pool (12 repeated-HTTPS-tested nodes)",
+  "remarks": "GitHub Free Encrypted Pool (3 TCP-reachable nodes)",
   "log": {
     "loglevel": "warning"
   },
   "stats": {},
   "dns": {
     "servers": [
-      "tcp://1.1.1.1:53",
-      "tcp://8.8.8.8:53"
-    ],
-    "queryStrategy": "UseIPv4"
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query"
+    ]
   },
   "inbounds": [
     {
@@ -45,147 +44,94 @@
   ],
   "outbounds": [
     {
-      "tag": "proxy_1_DE",
-      "protocol": "http",
+      "tag": "node_1",
+      "protocol": "vmess",
       "settings": {
-        "servers": [
+        "vnext": [
           {
-            "address": "103.237.102.191",
-            "port": 11111
+            "address": "104.21.82.183",
+            "port": 8880,
+            "users": [
+              {
+                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
           }
         ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/",
+          "headers": {
+            "Host": "server26.beheshtbaneh.com"
+          }
+        }
       }
     },
     {
-      "tag": "proxy_2_DE",
-      "protocol": "http",
+      "tag": "node_2",
+      "protocol": "vmess",
       "settings": {
-        "servers": [
+        "vnext": [
           {
-            "address": "116.204.166.153",
-            "port": 8080
+            "address": "gov.uk",
+            "port": 443,
+            "users": [
+              {
+                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
           }
         ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "zheshiscp.com",
+          "fingerprint": "chrome"
+        },
+        "wsSettings": {
+          "path": "/77848824",
+          "headers": {
+            "Host": "zheshiscp.com"
+          }
+        }
       }
     },
     {
-      "tag": "proxy_3_DE",
-      "protocol": "http",
+      "tag": "node_3",
+      "protocol": "vmess",
       "settings": {
-        "servers": [
+        "vnext": [
           {
-            "address": "77.110.100.216",
-            "port": 3128
+            "address": "www.darkroom.lol",
+            "port": 8080,
+            "users": [
+              {
+                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
           }
         ]
-      }
-    },
-    {
-      "tag": "proxy_4_US",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "130.127.204.197",
-            "port": 8080
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/",
+          "headers": {
+            "Host": "www.darkroom.lol"
           }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_5_JP",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "180.53.81.127",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_6_IN",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "45.194.41.231",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_7_HK",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "42.200.230.45",
-            "port": 10808
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_8_SA",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "130.110.103.245",
-            "port": 3128
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_9_ID",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "103.46.8.102",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_10_VN",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "14.225.205.152",
-            "port": 1081
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_11_TR",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "89.251.21.22",
-            "port": 8080
-          }
-        ]
-      }
-    },
-    {
-      "tag": "proxy_12_EC",
-      "protocol": "http",
-      "settings": {
-        "servers": [
-          {
-            "address": "181.78.195.136",
-            "port": 999
-          }
-        ]
+        }
       }
     },
     {
@@ -209,20 +155,15 @@
       },
       {
         "type": "field",
-        "network": "udp",
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "network": "tcp",
-        "balancerTag": "safe-balancer"
+        "network": "tcp,udp",
+        "balancerTag": "free-node-balancer"
       }
     ],
     "balancers": [
       {
-        "tag": "safe-balancer",
+        "tag": "free-node-balancer",
         "selector": [
-          "proxy_"
+          "node_"
         ],
         "strategy": {
           "type": "roundRobin"
