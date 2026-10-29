@@ -171,6 +171,14 @@ def parse_link(link):
             raise ValueError("Shadowsocks cipher is not on the approved AEAD allowlist")
         return result
     if link.startswith("vless://"):
+        # Parse the URI query here (not in parse_vless) and reject insecure
+        # certificate-validation overrides for BOTH TLS and Reality profiles.
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(link).query,
+                                     keep_blank_values=True)
+        insecure_values = [value.strip().lower()
+                           for value in query.get("allowInsecure", [])]
+        if any(value in ("1", "true", "yes", "on") for value in insecure_values):
+            raise ValueError("allowInsecure is forbidden in the strict pool")
         result = parse_vless(link)
         stream = result[0].get("streamSettings", {})
         security = stream.get("security")
@@ -178,11 +186,10 @@ def parse_link(link):
             tls = stream.get("tlsSettings", {})
             if not tls.get("serverName"):
                 raise ValueError("TLS server name is required")
-            if query.get("allowInsecure", ["false"])[0].lower() in ("1", "true", "yes"):
-                raise ValueError("TLS certificate verification cannot be disabled")
         elif security == "reality":
             reality = stream.get("realitySettings", {})
-            if not reality.get("serverName") or not reality.get("publicKey") or not reality.get("shortId"):
+            if (not reality.get("serverName") or not reality.get("publicKey")
+                    or not reality.get("shortId")):
                 raise ValueError("Reality authentication parameters are incomplete")
         else:
             raise ValueError("VLESS without authenticated TLS/Reality is rejected")
