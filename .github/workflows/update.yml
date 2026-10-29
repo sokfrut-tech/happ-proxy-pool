@@ -48,7 +48,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add happ_config.json
+          git add happ_config.json happ_subscription.txt
           if git diff --cached --quiet; then
             echo "No changes in verified pool."
             exit 0
