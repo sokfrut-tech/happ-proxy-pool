@@ -128,7 +128,7 @@ def stream_settings(query, host):
     elif network == "httpupgrade":
         stream["httpupgradeSettings"] = {
             "path": query.get("path", ["/"])[0],
-            " host": query.get("host", [""])[0],
+            "host": query.get("host", [""])[0],
         }
     return stream
 
