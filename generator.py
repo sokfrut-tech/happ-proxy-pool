@@ -321,14 +321,14 @@ def build_config(candidates):
     }
     with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
-        file.write("\\n")
+        file.write("\n")
 
     # Happ mobile subscriptions should be share-link lists, not a full Xray
     # core config with localhost inbounds that bypasses Happ's TUN setup.
     with open("happ_subscription.txt", "w", encoding="utf-8") as file:
-        file.write("#profile-title: Free Verified Pool\\n")
+        file.write("#profile-title: Free Verified Pool\n")
         for _outbound, _host, _port, _latency, link in candidates:
-            file.write(link + "\\n")
+            file.write(link + "\n")
 
 
 def main():
