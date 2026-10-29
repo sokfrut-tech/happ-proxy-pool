@@ -353,8 +353,8 @@ def build_config(candidates):
     with open("happ_subscription.txt", "w", encoding="utf-8") as file:
         file.write("#profile-title: DE FREE NODES\n")
         file.write("# MOBILE and HOUSE are trial labels, not proven network compatibility.\n")
-        mobile_group = candidates[::2]
-        home_group = candidates[1::2]
+        mobile_group = [item for item in candidates if item[6]]
+        home_group = [item for item in candidates if not item[6]]
         for index, item in enumerate(mobile_group, 1):
             link = item[4]
             file.write(label_link(link, f"MOBILE - DE-{index:02d}") + "\n")
