@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build-pool:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,32 +27,29 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Collect encrypted share links and check TCP endpoints
-        run: python3 generator.py
+      - name: Install Xray core
+        run: |
+          curl -fsSL https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip -o /tmp/xray.zip
+          unzip -q /tmp/xray.zip xray -d /tmp/xray
+          chmod +x /tmp/xray/xray
+          /tmp/xray/xray version
 
-      - name: Validate generated JSON
-        run: python3 -m json.tool happ_config.json > /dev/null
+      - name: Collect and verify nodes with real HTTPS requests
+        run: python3 generator.py --xray /tmp/xray/xray
 
-      - name: Commit updated pool safely
+      - name: Validate generated config with Xray
+        run: |
+          python3 -m json.tool happ_config.json > /dev/null
+          /tmp/xray/xray run -test -c happ_config.json
+
+      - name: Commit verified pool safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for attempt in 1 2 3; do
-            git fetch origin main
-            git reset --hard origin/main
-            python3 generator.py
-            python3 -m json.tool happ_config.json > /dev/null
-            git add happ_config.json
-            if git diff --cached --quiet; then
-              echo "No changes in proxy pool."
-              exit 0
-            fi
-            git commit -m "Update Happ proxy pool [skip ci]"
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "Push race on attempt $attempt; retrying from latest main."
-            sleep 2
-          done
-          echo "Could not publish proxy pool after 3 attempts."
-          exit 1
+          git add happ_config.json
+          if git diff --cached --quiet; then
+            echo "No changes in verified pool."
+            exit 0
+          fi
+          git commit -m "Update Happ pool with Xray-verified nodes [skip ci]"
+          git push origin HEAD:prototype/xray-real-checks
