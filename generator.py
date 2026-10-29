@@ -397,9 +397,10 @@ def main():
         probe = real_proxy_check(xray_bin, outbound)
         if probe is None:
             return None, f"FAIL {country} {host}:{port}"
-        latency, exit_country = probe
-        record = (outbound, host, port, latency, link, exit_country)
-        return record, f"PASS EXIT={exit_country} {host}:{port} HTTPS={latency}ms"
+        latency, exit_country, sites, mobile_ok = probe
+        record = (outbound, host, port, latency, link, exit_country, mobile_ok)
+        site_summary = ",".join(f"{name}={'OK' if ok else 'FAIL'}" for name, ok in sites.items())
+        return record, f"PASS EXIT={exit_country} {host}:{port} HTTPS={latency}ms MOBILE={mobile_ok} [{site_summary}]"
     verified = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=CHECK_WORKERS) as pool:
         futures = [pool.submit(check_one, item) for item in located]
