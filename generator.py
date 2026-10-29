@@ -228,15 +228,23 @@ def real_proxy_check(xray_bin, outbound):
             if not ready:
                 return None
             started = time.monotonic()
+            # Verify HTTPS and detect the actual VPN exit country through the proxy.
             result = subprocess.run(
-                ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "3",
-                 "--max-time", "7", "--socks5-hostname", f"127.0.0.1:{local_port}",
-                 "https://www.cloudflare.com/cdn-cgi/trace"],
-                capture_output=True, text=True, timeout=9)
+                ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "4",
+                 "--max-time", "10", "--socks5-hostname", f"127.0.0.1:{local_port}",
+                 "https://ipwho.is/"],
+                capture_output=True, text=True, timeout=12)
             elapsed = round((time.monotonic() - started) * 1000)
-            if result.returncode == 0 and "ip=" in result.stdout and "http=" in result.stdout:
-                return elapsed
-            return None
+            if result.returncode != 0:
+                return None
+            try:
+                geo = json.loads(result.stdout)
+                country = str(geo.get("country_code", "ZZ")).upper()
+                if geo.get("success") is False or len(country) != 2 or not country.isalpha():
+                    country = "ZZ"
+            except (ValueError, TypeError):
+                country = "ZZ"
+            return elapsed, country
         except (subprocess.TimeoutExpired, OSError):
             return None
         finally:
@@ -310,13 +318,14 @@ def main():
         located.append((outbound, host, port, link, country))
         print(f"GEO {country} {host}:{port}")
     located.sort(key=lambda item: (geo_rank(item[4]), item[4] != "DE", item[1]))
-    print("Testing real HTTPS traffic; German endpoints are ranked first, then Europe, then other regions")
+    print("Testing proxied HTTPS and detecting actual VPN exit country through ipwho.is; Germany first")
     verified = []
     for index, (outbound, host, port, link, country) in enumerate(located, 1):
-        latency = real_proxy_check(xray_bin, outbound)
-        if latency is not None:
-            verified.append((outbound, host, port, latency, link, country))
-            print(f"PASS {index}/{len(located)} {country} {host}:{port} HTTPS={latency}ms")
+        probe = real_proxy_check(xray_bin, outbound)
+        if probe is not None:
+            latency, exit_country = probe
+            verified.append((outbound, host, port, latency, link, exit_country))
+            print(f"PASS {index}/{len(located)} EXIT={exit_country} {host}:{port} HTTPS={latency}ms")
         else:
             print(f"FAIL {index}/{len(located)} {country} {host}:{port}")
     verified.sort(key=lambda item: (geo_rank(item[5]), item[3]))
@@ -328,7 +337,7 @@ def main():
     build_config(selected)
     print(f"RESULT: published {len(selected)} HTTPS-verified nodes; Germany={germany_count}, Europe={europe_count}.")
     if germany_count == 0:
-        print("WARNING: no verified German endpoint found in current public sources; European fallbacks are ranked first.")
+        print("WARNING: no verified German VPN exit found in current public sources; no German node can be claimed.")
     print("UDP, long-term availability, and operator privacy are not verified.")
 
 
