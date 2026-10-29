@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate an Xray/Happ config from public HTTP CONNECT proxies.
+"""Build a conservative Happ/Xray config from public HTTP CONNECT proxies.
 
-Every candidate is tested by making a real HTTPS request through the proxy.
-Public proxies are untrusted; this is a connectivity test, not a privacy guarantee.
+Candidates are checked from GitHub Actions with repeated, certificate-validated
+HTTPS requests. This is a reachability filter, not a privacy or uptime guarantee.
 """
 import json
 import re
@@ -12,12 +12,14 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 OUTPUT_FILE = "happ_config.json"
-TIMEOUT = 4
-MAX_WORKERS = 80
+TIMEOUT = 5
+MAX_WORKERS = 60
 MAX_CANDIDATES = 1000
-TARGET_LIMIT = 15
+TARGET_LIMIT = 12
+CHECKS_PER_PROXY = 2
 TEST_URL = "https://www.cloudflare.com/cdn-cgi/trace"
-USER_AGENT = "HappProxyPool/2.0"
+USER_AGENT = "HappProxyPool/3.0"
+BLOCKED_EXIT_COUNTRIES = {"RU", "BY", "CN", "IR"}
 
 SOURCES = [
     "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/countries/DE/data.txt",
@@ -57,34 +59,41 @@ def fetch_candidates():
 
 
 def verify_proxy(proxy):
-    """Require successful CONNECT, certificate-validated TLS and a real HTTP 200."""
+    """Require repeated HTTPS 200 responses through a validated CONNECT tunnel."""
     proxy_url = "http://" + proxy
     opener = urllib.request.build_opener(
         urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
     )
-    request = urllib.request.Request(
-        TEST_URL,
-        headers={"User-Agent": USER_AGENT, "Accept": "text/plain"},
-    )
-    started = time.monotonic()
+    latencies = []
+    response_body = ""
+
     try:
-        with opener.open(request, timeout=TIMEOUT) as response:
-            if response.status != 200:
-                return None
-            body = response.read(8192).decode("utf-8", errors="ignore")
-            if "visit_scheme=https" not in body:
-                return None
-        latency = round((time.monotonic() - started) * 1000)
-        location = re.search(r"(?m)^loc=([A-Z]{2})$", body)
+        for _ in range(CHECKS_PER_PROXY):
+            request = urllib.request.Request(
+                TEST_URL,
+                headers={"User-Agent": USER_AGENT, "Accept": "text/plain"},
+            )
+            started = time.monotonic()
+            with opener.open(request, timeout=TIMEOUT) as response:
+                if response.status != 200:
+                    return None
+                body = response.read(8192).decode("utf-8", errors="ignore")
+                if "visit_scheme=https" not in body:
+                    return None
+            latencies.append(round((time.monotonic() - started) * 1000))
+            response_body = body
+
+        location = re.search(r"(?m)^loc=([A-Z]{2})$", response_body)
         country = location.group(1) if location else "UN"
-        # Keep the existing pool policy: avoid these exit locations.
-        if country in {"RU", "BY", "CN", "IR"}:
+        if country in BLOCKED_EXIT_COUNTRIES:
             return None
+
+        host, port_str = proxy.rsplit(":", 1)
         return {
-            "address": proxy.split(":")[0],
-            "port": int(proxy.split(":")[1]),
+            "address": host,
+            "port": int(port_str),
             "country": country,
-            "latency": latency,
+            "latency": max(latencies),
         }
     except (OSError, TimeoutError, urllib.error.URLError, ValueError):
         return None
@@ -102,6 +111,7 @@ def build_happ_json(verified):
                 "servers": [{"address": item["address"], "port": item["port"]}]
             },
         })
+
     outbounds.extend([
         {"tag": "direct", "protocol": "freedom"},
         {"tag": "block", "protocol": "blackhole"},
@@ -112,37 +122,49 @@ def build_happ_json(verified):
         {"type": "field", "network": "udp", "outboundTag": "block"},
     ]
     routing = {"domainStrategy": "AsIs", "rules": rules}
+
     if verified:
+        # Round-robin avoids Xray's runtime observatory/ping subsystem.
+        # It distributes new connections; it is NOT a guaranteed per-request failover.
         routing["balancers"] = [{
-            "tag": "auto-balancer",
+            "tag": "safe-balancer",
             "selector": ["proxy_"],
-            "strategy": {"type": "leastPing"},
+            "strategy": {"type": "roundRobin"},
         }]
         rules.append({
-            "type": "field", "network": "tcp", "balancerTag": "auto-balancer"
+            "type": "field",
+            "network": "tcp",
+            "balancerTag": "safe-balancer",
         })
     else:
-        # Never publish an empty balancer or keep stale dead proxies.
+        # Never publish an empty balancer or retain a stale dead proxy list.
         rules.append({
-            "type": "field", "network": "tcp", "outboundTag": "direct"
+            "type": "field",
+            "network": "tcp",
+            "outboundTag": "direct",
         })
 
     config = {
-        "remarks": f"GitHub Auto-Pool ({len(verified)} HTTPS-tested nodes)",
+        "remarks": f"Safe Auto-Pool ({len(verified)} repeated-HTTPS-tested nodes)",
         "log": {"loglevel": "warning"},
+        "stats": {},
         "dns": {
             "servers": ["tcp://1.1.1.1:53", "tcp://8.8.8.8:53"],
             "queryStrategy": "UseIPv4",
         },
         "inbounds": [
             {
-                "tag": "socks-in", "port": 10808, "listen": "127.0.0.1",
+                "tag": "socks-in",
+                "port": 10808,
+                "listen": "127.0.0.1",
                 "protocol": "socks",
                 "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
                 "settings": {"auth": "noauth", "udp": True},
             },
             {
-                "tag": "http-in", "port": 10809, "listen": "127.0.0.1",
+                "tag": "http-in",
+                "port": 10809,
+                "listen": "127.0.0.1",
                 "protocol": "http",
                 "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
             },
@@ -150,16 +172,6 @@ def build_happ_json(verified):
         "outbounds": outbounds,
         "routing": routing,
     }
-    if verified:
-        config["burstObservatory"] = {
-            "subjectSelector": ["proxy_"],
-            "pingConfig": {
-                "destination": TEST_URL,
-                "interval": "15s",
-                "sampling": 2,
-                "timeout": "3s",
-            },
-        }
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
@@ -168,8 +180,10 @@ def build_happ_json(verified):
 
 def main():
     candidates = fetch_candidates()
-    print(f"Testing up to {min(len(candidates), MAX_CANDIDATES)} candidates "
-          f"with {MAX_WORKERS} workers")
+    print(
+        f"Testing up to {len(candidates)} candidates with "
+        f"{MAX_WORKERS} workers; {CHECKS_PER_PROXY} HTTPS checks each"
+    )
     verified = []
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(verify_proxy, proxy): proxy for proxy in candidates}
@@ -179,17 +193,17 @@ def main():
             result = future.result()
             if result:
                 verified.append(result)
-                print(f"Verified {result['country']} proxy: {result['latency']} ms")
             if completed % 100 == 0:
-                print(f"Progress: {completed}/{len(futures)} checked; "
-                      f"{len(verified)} passed")
+                print(f"Progress: {completed}/{len(futures)} checked; {len(verified)} passed")
 
-    # Prefer German exits, then the lowest measured end-to-end HTTPS latency.
+    # Prefer German exits, then proxies with the best worst-case test latency.
     verified.sort(key=lambda item: (item["country"] != "DE", item["latency"]))
     selected = verified[:TARGET_LIMIT]
     build_happ_json(selected)
-    print(f"RESULT: {len(selected)} HTTPS-tested proxies selected from "
-          f"{len(candidates)} candidates")
+    print(
+        f"RESULT: {len(selected)} repeated-HTTPS-tested proxies selected "
+        f"from {len(candidates)} candidates"
+    )
     print(f"Wrote {OUTPUT_FILE}")
 
 
