@@ -227,6 +227,7 @@ def geo_rank(code):
 
 
 def real_proxy_check(xray_bin, outbound):
+    """Verify several real destinations through the proxy, not just generic HTTPS."""
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         local_port = sock.getsockname()[1]
@@ -234,6 +235,13 @@ def real_proxy_check(xray_bin, outbound):
              "inbounds": [{"listen": "127.0.0.1", "port": local_port,
                            "protocol": "socks", "settings": {"auth": "noauth", "udp": False}}],
              "outbounds": [outbound]}
+    destinations = {
+        "google": "https://www.google.com/generate_204",
+        "youtube": "https://www.youtube.com/generate_204",
+        "telegram": "https://web.telegram.org/",
+        "facebook": "https://www.facebook.com/",
+        "yandex": "https://ya.ru/"
+    }
     with tempfile.TemporaryDirectory() as tmp:
         config_path = os.path.join(tmp, "probe.json")
         with open(config_path, "w", encoding="utf-8") as handle:
@@ -256,33 +264,41 @@ def real_proxy_check(xray_bin, outbound):
                     time.sleep(0.15)
             if not ready:
                 return None
-            started = time.monotonic()
-            # Verify HTTPS and detect the actual VPN exit country through the proxy.
             proxy = f"127.0.0.1:{local_port}"
-            result = subprocess.run(
+            started = time.monotonic()
+            def fetch(url):
+                try:
+                    result = subprocess.run(
+                        ["curl", "--location", "--silent", "--show-error",
+                         "--connect-timeout", "4", "--max-time", "9",
+                         "--socks5-hostname", proxy, "--output", "/dev/null",
+                         "--write-out", "%{http_code}", url],
+                        capture_output=True, text=True, timeout=11)
+                    code = int(result.stdout.strip() or "0")
+                    return result.returncode == 0 and 200 <= code < 400
+                except (subprocess.TimeoutExpired, OSError, ValueError):
+                    return False
+            # Require two independent baseline HTTPS checks and retain per-site outcomes.
+            ip_result = subprocess.run(
                 ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "4",
                  "--max-time", "10", "--socks5-hostname", proxy, "https://ipwho.is/"],
                 capture_output=True, text=True, timeout=12)
+            if ip_result.returncode != 0:
+                return None
+            baseline = fetch("https://www.cloudflare.com/cdn-cgi/trace")
+            if not baseline:
+                return None
+            site_results = {name: fetch(url) for name, url in destinations.items()}
             elapsed = round((time.monotonic() - started) * 1000)
-            if result.returncode != 0:
-                return None
-            # Independently verify a second HTTPS destination through the same tunnel.
-            # curl validates TLS certificates by default; no -k/--insecure is used.
-            second = subprocess.run(
-                ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "4",
-                 "--max-time", "8", "--socks5-hostname", proxy,
-                 "https://www.cloudflare.com/cdn-cgi/trace"],
-                capture_output=True, text=True, timeout=10)
-            if second.returncode != 0 or "ip=" not in second.stdout:
-                return None
             try:
-                geo = json.loads(result.stdout)
+                geo = json.loads(ip_result.stdout)
                 country = str(geo.get("country_code", "ZZ")).upper()
                 if geo.get("success") is False or len(country) != 2 or not country.isalpha():
                     country = "ZZ"
             except (ValueError, TypeError):
                 country = "ZZ"
-            return elapsed, country
+            mobile_ok = all(site_results[name] for name in ("google", "youtube", "telegram", "facebook"))
+            return elapsed, country, site_results, mobile_ok
         except (subprocess.TimeoutExpired, OSError):
             return None
         finally:
@@ -375,7 +391,7 @@ def main():
         located.append((outbound, host, port, link, country))
         print(f"GEO {country} {host}:{port}")
     located.sort(key=lambda item: (geo_rank(item[4]), item[4] != "DE", item[1]))
-    print("Strict mode: AEAD SS or authenticated TLS/Reality only; verifying proxied HTTPS and actual German exit")
+    print("Strict mode: AEAD SS or authenticated TLS/Reality; testing Google, YouTube, Telegram, Facebook and Yandex through every proxy")
     def check_one(item):
         outbound, host, port, link, country = item
         probe = real_proxy_check(xray_bin, outbound)
@@ -392,7 +408,7 @@ def main():
             if record is not None:
                 verified.append(record)
             print(f"CHECK {index}/{len(located)} {message}")
-    verified.sort(key=lambda item: (geo_rank(item[5]), item[3]))
+    verified.sort(key=lambda item: (not item[6], geo_rank(item[5]), item[3]))
     german_verified = [item for item in verified if item[5] == "DE"]
     selected = german_verified[:MAX_NODES]
     if not selected:
@@ -400,7 +416,7 @@ def main():
     germany_count = sum(1 for item in selected if item[5] == "DE")
     europe_count = sum(1 for item in selected if item[5] in EUROPE_COUNTRIES)
     build_config(selected)
-    print(f"RESULT: published {len(selected)} HTTPS-verified nodes; Germany={germany_count}, Europe={europe_count}.")
+    print(f"RESULT: published {len(selected)} HTTPS-verified nodes; mobile-site-pass={sum(1 for item in selected if item[6])}; Germany={germany_count}, Europe={europe_count}.")
     if germany_count != len(selected):
         raise SystemExit("Safety check failed: non-German node would be published.")
     print("UDP, long-term availability, and operator privacy are not verified.")
