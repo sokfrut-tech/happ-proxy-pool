@@ -45,41 +45,6 @@
   "outbounds": [
     {
       "tag": "node_1",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "155.212.240.10",
-            "port": 443,
-            "users": [
-              {
-                "id": "f27b6f65-6e59-4f89-b929-afa397ca587f",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "n.bitpulse.me",
-          "fingerprint": "chrome",
-          "alpn": [
-            "http/1.1"
-          ]
-        },
-        "wsSettings": {
-          "path": "/019bcbad-3813-7cce-8786-3ac0e418f128?ed=2560",
-          "headers": {
-            "Host": "n.bitpulse.me"
-          }
-        }
-      }
-    },
-    {
-      "tag": "node_2",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
@@ -93,7 +58,7 @@
       }
     },
     {
-      "tag": "node_3",
+      "tag": "node_2",
       "protocol": "vmess",
       "settings": {
         "vnext": [
@@ -116,35 +81,32 @@
       }
     },
     {
+      "tag": "node_3",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "31.184.244.134",
+            "port": 443,
+            "users": [
+              {
+                "id": "62ff829a-d100-4c06-a324-90bfe2f47a52",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "jouakehof491.dop72.com"
+        }
+      }
+    },
+    {
       "tag": "node_4",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "57.129.113.16",
-            "port": 8388,
-            "method": "chacha20-ietf-poly1305",
-            "password": "NcAXc0UZI6yQJE1p8QmOv8"
-          }
-        ]
-      }
-    },
-    {
-      "tag": "node_5",
-      "protocol": "shadowsocks",
-      "settings": {
-        "servers": [
-          {
-            "address": "185.226.172.8",
-            "port": 8008,
-            "method": "aes-256-gcm",
-            "password": "XKFKl2rULjIp74"
-          }
-        ]
-      }
-    },
-    {
-      "tag": "node_6",
       "protocol": "vmess",
       "settings": {
         "vnext": [
@@ -171,16 +133,16 @@
       }
     },
     {
-      "tag": "node_7",
+      "tag": "node_5",
       "protocol": "vless",
       "settings": {
         "vnext": [
           {
-            "address": "201.58.183.42",
-            "port": 443,
+            "address": "217.60.151.141",
+            "port": 47443,
             "users": [
               {
-                "id": "50a87e21-f0e2-4b53-a787-91adfe748f63",
+                "id": "1fe01c8a-ab37-4e95-bbfc-95d4a608931e",
                 "encryption": "none",
                 "flow": "xtls-rprx-vision"
               }
@@ -189,43 +151,18 @@
         ]
       },
       "streamSettings": {
-        "network": "tcp",
+        "network": "raw",
         "security": "reality",
         "realitySettings": {
-          "serverName": "13oktober.live",
-          "fingerprint": "qq",
-          "publicKey": "y0wgEdmPNIKlAMJHeC0teOW_fBnX8tmRE8n1CwOZSwU",
-          "shortId": ""
+          "serverName": "ge-1.waspguard.ru",
+          "fingerprint": "firefox",
+          "publicKey": "zHU0WVJ6mMqTgBj6hEt_B0yRnegzdTGGLBydGyAPvlk",
+          "shortId": "ae97223a8f799001"
         }
       }
     },
     {
-      "tag": "node_8",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "31.184.244.134",
-            "port": 443,
-            "users": [
-              {
-                "id": "62ff829a-d100-4c06-a324-90bfe2f47a52",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "jouakehof491.dop72.com"
-        }
-      }
-    },
-    {
-      "tag": "node_9",
+      "tag": "node_6",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -254,16 +191,16 @@
       }
     },
     {
-      "tag": "node_10",
+      "tag": "node_7",
       "protocol": "vless",
       "settings": {
         "vnext": [
           {
-            "address": "217.60.151.141",
-            "port": 47443,
+            "address": "46.28.69.123",
+            "port": 443,
             "users": [
               {
-                "id": "1fe01c8a-ab37-4e95-bbfc-95d4a608931e",
+                "id": "b945f9aa-1b45-4912-aa7e-248509472bad",
                 "encryption": "none",
                 "flow": "xtls-rprx-vision"
               }
@@ -272,13 +209,98 @@
         ]
       },
       "streamSettings": {
-        "network": "raw",
+        "network": "tcp",
         "security": "reality",
         "realitySettings": {
-          "serverName": "ge-1.waspguard.ru",
-          "fingerprint": "firefox",
-          "publicKey": "zHU0WVJ6mMqTgBj6hEt_B0yRnegzdTGGLBydGyAPvlk",
-          "shortId": "ae97223a8f799001"
+          "serverName": "gateway.icloud.com",
+          "fingerprint": "chrome",
+          "publicKey": "7KnJYp2-sE3o35mnbSZzX3fNg-ns9n8xyNfkRSHCD3E",
+          "shortId": "238e23c5150f02e4"
+        }
+      }
+    },
+    {
+      "tag": "node_8",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "5.252.179.15",
+            "port": 443,
+            "users": [
+              {
+                "id": "0ab273e4-cea6-41d0-bbab-41071d2fc455",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.bing.com",
+          "fingerprint": "random",
+          "publicKey": "XQB2zIgrhD8AtxgYFM8UiiWYt1sLVBLhMg1M4-sGMAY",
+          "shortId": "296f27de82dad7ff"
+        }
+      }
+    },
+    {
+      "tag": "node_9",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "5.252.179.15",
+            "port": 443,
+            "users": [
+              {
+                "id": "0ab273e4-cea6-41d0-bbab-41071d2fc455",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.bing.com",
+          "fingerprint": "chrome",
+          "publicKey": "XQB2zIgrhD8AtxgYFM8UiiWYt1sLVBLhMg1M4-sGMAY",
+          "shortId": "296f27de82dad7ff"
+        }
+      }
+    },
+    {
+      "tag": "node_10",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "91.107.169.224",
+            "port": 80,
+            "users": [
+              {
+                "id": "d4b69108-f756-48af-a331-e8356bc95eb4",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "httpupgrade",
+        "security": "none",
+        "httpupgradeSettings": {
+          "path": "/",
+          "host": "google.whatsapp.snapp.torob.basalam.dns-look.space."
         }
       }
     },
