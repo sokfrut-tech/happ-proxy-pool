@@ -14,10 +14,10 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 OUTPUT_FILE = "happ_config.json"
-TIMEOUT = 6
-MAX_WORKERS = 40
+TIMEOUT = 2
+MAX_WORKERS = 60
 TARGET_LIMIT = 12
-MAX_CANDIDATES = 600
+MAX_CANDIDATES = 120
 TEST_HOST = "www.cloudflare.com"
 TEST_PATH = "/cdn-cgi/trace"
 
