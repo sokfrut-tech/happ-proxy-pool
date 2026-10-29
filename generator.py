@@ -22,7 +22,7 @@ SOURCES = ["https://radarhub.top/by-country/germany.txt", "https://raw.githubuse
 MAX_NODES = 10
 MAX_CANDIDATES = 120
 CONNECT_TIMEOUT = 3
-USER_AGENT = "HappFreeNodePool/1.0"
+USER_AGENT = "HappFreeNodePool/1.1"
 # Only verified German VPN exits are published; no overseas fallback.
 EUROPE_COUNTRIES = {
     "DE", "AT", "CH", "NL", "BE", "LU", "FR", "PL", "CZ", "DK",
@@ -161,12 +161,34 @@ def parse_vmess(link):
 
 
 def parse_link(link):
+    """Accept only encrypted transports with authenticated TLS/Reality or AEAD SS."""
     if link.startswith("ss://"):
-        return parse_ss(link)
+        result = parse_ss(link)
+        method = result[0]["settings"]["servers"][0]["method"].lower()
+        allowed = {"aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305"}
+        if method not in allowed:
+            raise ValueError("Shadowsocks cipher is not on the approved AEAD allowlist")
+        return result
     if link.startswith("vless://"):
-        return parse_vless(link)
+        result = parse_vless(link)
+        stream = result[0].get("streamSettings", {})
+        security = stream.get("security")
+        if security == "tls":
+            if not stream.get("tlsSettings", {}).get("serverName"):
+                raise ValueError("TLS server name is required")
+        elif security == "reality":
+            reality = stream.get("realitySettings", {})
+            if not reality.get("serverName") or not reality.get("publicKey") or not reality.get("shortId"):
+                raise ValueError("Reality authentication parameters are incomplete")
+        else:
+            raise ValueError("VLESS without authenticated TLS/Reality is rejected")
+        return result
     if link.startswith("vmess://"):
-        return parse_vmess(link)
+        result = parse_vmess(link)
+        stream = result[0].get("streamSettings", {})
+        if stream.get("security") != "tls" or not stream.get("tlsSettings", {}).get("serverName"):
+            raise ValueError("VMess without TLS is rejected")
+        return result
     raise ValueError("unsupported scheme")
 
 
@@ -229,13 +251,22 @@ def real_proxy_check(xray_bin, outbound):
                 return None
             started = time.monotonic()
             # Verify HTTPS and detect the actual VPN exit country through the proxy.
+            proxy = f"127.0.0.1:{local_port}"
             result = subprocess.run(
                 ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "4",
-                 "--max-time", "10", "--socks5-hostname", f"127.0.0.1:{local_port}",
-                 "https://ipwho.is/"],
+                 "--max-time", "10", "--socks5-hostname", proxy, "https://ipwho.is/"],
                 capture_output=True, text=True, timeout=12)
             elapsed = round((time.monotonic() - started) * 1000)
             if result.returncode != 0:
+                return None
+            # Independently verify a second HTTPS destination through the same tunnel.
+            # curl validates TLS certificates by default; no -k/--insecure is used.
+            second = subprocess.run(
+                ["curl", "--silent", "--show-error", "--fail", "--connect-timeout", "4",
+                 "--max-time", "8", "--socks5-hostname", proxy,
+                 "https://www.cloudflare.com/cdn-cgi/trace"],
+                capture_output=True, text=True, timeout=10)
+            if second.returncode != 0 or "ip=" not in second.stdout:
                 return None
             try:
                 geo = json.loads(result.stdout)
@@ -273,7 +304,7 @@ def build_config(candidates):
                                  "strategy": {"type": "roundRobin"}}]
         rules.append({"type": "field", "network": "tcp,udp",
                       "balancerTag": "free-node-balancer"})
-    config = {"remarks": f"Germany-priority free pool ({len(candidates)} HTTPS-verified nodes)",
+    config = {"remarks": f"Germany Strict Security ({len(candidates)} verified nodes)",
               "log": {"loglevel": "warning"}, "stats": {},
               "dns": {"servers": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]},
               "inbounds": [
@@ -287,7 +318,7 @@ def build_config(candidates):
         json.dump(config, file, indent=2, ensure_ascii=False)
         file.write("\n")
     with open("happ_subscription.txt", "w", encoding="utf-8") as file:
-        file.write("#profile-title: Germany Priority Free Pool\n")
+        file.write("#profile-title: Germany Strict Security\n")
         for _outbound, _host, _port, _latency, link, _country in candidates:
             file.write(link + "\n")
 
@@ -310,7 +341,7 @@ def main():
                 seen.add(key)
                 parsed.append((outbound, host, port, link))
         except Exception as exc:
-            print(f"Skipping unsupported/malformed share link: {type(exc).__name__}")
+            print(f"REJECT insecure/invalid candidate: {type(exc).__name__}: {exc}")
     print(f"Parsed {len(parsed)} unique candidates; resolving endpoint countries")
     located = []
     for outbound, host, port, link in parsed:
@@ -318,7 +349,7 @@ def main():
         located.append((outbound, host, port, link, country))
         print(f"GEO {country} {host}:{port}")
     located.sort(key=lambda item: (geo_rank(item[4]), item[4] != "DE", item[1]))
-    print("Testing proxied HTTPS and detecting actual VPN exit country through ipwho.is; Germany first")
+    print("Strict mode: AEAD SS or authenticated TLS/Reality only; verifying proxied HTTPS and actual German exit")
     verified = []
     for index, (outbound, host, port, link, country) in enumerate(located, 1):
         probe = real_proxy_check(xray_bin, outbound)
