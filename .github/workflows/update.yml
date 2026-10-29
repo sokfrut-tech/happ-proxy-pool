@@ -12,9 +12,10 @@ on:
 permissions:
   contents: write
 
+# Newer runs supersede older runs so stale jobs cannot republish old results.
 concurrency:
-  group: happ-proxy-pool
-  cancel-in-progress: false
+  group: happ-proxy-pool-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-pool:
@@ -25,6 +26,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: prototype/xray-real-checks
+
+      - name: Record checked-out revision
+        run: echo "CHECKED_OUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -56,14 +60,15 @@ jobs:
             exit 0
           fi
           git commit -m "Update Happ pool with Xray-verified nodes [skip ci]"
-          # Another scheduled/PR run may have advanced the branch after checkout.
-          # Rebase our generated files onto the latest branch and retry safely.
-          for attempt in 1 2 3; do
-            git pull --rebase origin prototype/xray-real-checks
-            if git push origin HEAD:prototype/xray-real-checks; then
-              exit 0
-            fi
-            sleep $((attempt * 2))
-          done
-          echo "Could not publish after three rebase/push attempts."
+          # Never rebase stale generated output over a newer branch revision.
+          git fetch origin prototype/xray-real-checks
+          REMOTE_SHA=$(git rev-parse origin/prototype/xray-real-checks)
+          if [ "$REMOTE_SHA" != "$CHECKED_OUT_SHA" ]; then
+            echo "Discarding stale probe results: branch advanced from $CHECKED_OUT_SHA to $REMOTE_SHA."
+            exit 0
+          fi
+          if git push origin HEAD:prototype/xray-real-checks; then
+            exit 0
+          fi
+          echo "Branch changed during publication; discarding this run rather than rebasing stale generated files."
           exit 1
