@@ -21,6 +21,7 @@ OUTPUT_FILE = "happ_config.json"
 SOURCES = ["https://radarhub.top/by-country/germany.txt", "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt", "https://raw.githubusercontent.com/freefq/free/master/v2"]
 MAX_NODES = 10
 MAX_CANDIDATES = 120
+CHECK_WORKERS = 12
 CONNECT_TIMEOUT = 3
 USER_AGENT = "HappFreeNodePool/1.1"
 # Only verified German VPN exits are published; no overseas fallback.
@@ -343,22 +344,31 @@ def main():
         except Exception as exc:
             print(f"REJECT insecure/invalid candidate: {type(exc).__name__}: {exc}")
     print(f"Parsed {len(parsed)} unique candidates; resolving endpoint countries")
+    print(f"Resolving endpoint countries concurrently ({CHECK_WORKERS} workers)")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CHECK_WORKERS) as pool:
+        geo_results = list(pool.map(lambda item: country_code(item[1]), parsed))
     located = []
-    for outbound, host, port, link in parsed:
-        country = country_code(host)
+    for (outbound, host, port, link), country in zip(parsed, geo_results):
         located.append((outbound, host, port, link, country))
         print(f"GEO {country} {host}:{port}")
     located.sort(key=lambda item: (geo_rank(item[4]), item[4] != "DE", item[1]))
     print("Strict mode: AEAD SS or authenticated TLS/Reality only; verifying proxied HTTPS and actual German exit")
-    verified = []
-    for index, (outbound, host, port, link, country) in enumerate(located, 1):
+    def check_one(item):
+        outbound, host, port, link, country = item
         probe = real_proxy_check(xray_bin, outbound)
-        if probe is not None:
-            latency, exit_country = probe
-            verified.append((outbound, host, port, latency, link, exit_country))
-            print(f"PASS {index}/{len(located)} EXIT={exit_country} {host}:{port} HTTPS={latency}ms")
-        else:
-            print(f"FAIL {index}/{len(located)} {country} {host}:{port}")
+        if probe is None:
+            return None, f"FAIL {country} {host}:{port}"
+        latency, exit_country = probe
+        record = (outbound, host, port, latency, link, exit_country)
+        return record, f"PASS EXIT={exit_country} {host}:{port} HTTPS={latency}ms"
+    verified = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CHECK_WORKERS) as pool:
+        futures = [pool.submit(check_one, item) for item in located]
+        for index, future in enumerate(concurrent.futures.as_completed(futures), 1):
+            record, message = future.result()
+            if record is not None:
+                verified.append(record)
+            print(f"CHECK {index}/{len(located)} {message}")
     verified.sort(key=lambda item: (geo_rank(item[5]), item[3]))
     german_verified = [item for item in verified if item[5] == "DE"]
     selected = german_verified[:MAX_NODES]
