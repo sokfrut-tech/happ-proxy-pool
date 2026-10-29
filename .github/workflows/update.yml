@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Find and verify HTTP CONNECT proxies
+      - name: Collect encrypted share links and check TCP endpoints
         run: python3 generator.py
 
       - name: Validate generated JSON
