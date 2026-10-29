@@ -312,7 +312,7 @@ def real_proxy_check(xray_bin, outbound):
 
 def build_config(candidates):
     outbounds = []
-    for index, (outbound, _host, _port, _latency, _link, _country) in enumerate(candidates, 1):
+    for index, (outbound, _host, _port, _latency, _link, _country, _mobile_ok) in enumerate(candidates, 1):
         outbound["tag"] = f"node_{index}"
         outbounds.append(outbound)
     outbounds.extend([{"tag": "direct", "protocol": "freedom"},
