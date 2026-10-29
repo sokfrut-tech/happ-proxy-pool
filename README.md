@@ -1,21 +1,23 @@
-# Happ Proxy Pool
+# Happ Free Encrypted Node Pool
 
-GitHub Actions checks public HTTP CONNECT proxy lists hourly and generates `happ_config.json`.
+GitHub Actions periodically fetches public Shadowsocks, VLESS and VMess share links and converts supported links into an Xray/Happ JSON configuration.
 
-## Generated configuration
+## Import into Happ
 
-After a successful workflow run, import this raw file into Happ:
+After a successful workflow run, import this raw file:
 
 `https://raw.githubusercontent.com/sokfrut-tech/happ-proxy-pool/main/happ_config.json`
 
-## Important security notice
+## What the checks mean
 
-This project uses **public, unauthenticated proxy servers**. They are untrusted and may log connection metadata, inject content into unencrypted HTTP traffic, or stop working without notice. The generator verifies that an HTTPS CONNECT tunnel can reach Cloudflare and that TLS certificate validation succeeds; this is only a connectivity check, not a security audit or guarantee of privacy. Do not use public proxies for banking, passwords, confidential work, or other sensitive traffic. Prefer a reputable paid VPN/proxy provider for that.
+The generator parses supported share-link formats and checks whether each server accepts a TCP connection from GitHub Actions. **An open TCP port does not prove that authentication succeeds, that VPN traffic works end-to-end, that UDP works, or that a node will remain online.** The current workflow does not perform a protocol handshake or UDP test.
 
-The generated file contains server addresses and ports only; it does not contain credentials. If no proxies pass verification, a valid direct-only configuration is generated instead of leaving a stale pool behind.
+Public nodes are operated by unknown third parties. They can log metadata, intercept unencrypted traffic, inject content, or disappear at any time. Do not use them for banking, passwords, confidential work, or sensitive accounts. Use a reputable provider if privacy or reliability matters.
+
+GitHub Actions is only the free automation host within GitHub's usage limits. It does not provide VPN egress bandwidth or turn GitHub into a VPN server.
 
 ## Automation
 
 - Runs hourly at minute 15 (UTC).
-- Also runs after commits to `main`.
-- Can be started manually from the Actions tab.
+- Runs after commits to `main`.
+- Can be started manually from Actions.
