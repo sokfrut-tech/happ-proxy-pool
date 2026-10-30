@@ -88,3 +88,11 @@ Pin exact upstream releases/commits. Check licence, provenance, checksum and ABI
 - SHA-256 AAR: записан в Summary страницы запуска (шаг «Summary»). Из сессии его прочитать нельзя, блоб недоступен. Сверить по странице запуска и вписать сюда.
 - Предыдущий запуск 41003651370 упал: NDK задавался после gomobile init, папка out не создавалась. Исправлено в коммите e16558d.
 - AAR ещё не подключён к приложению.
+
+## Шаги 2 и 3 (2026-10-30): статус
+- Код: LibXrayEngine (поиск классов gomobile во время работы), HappVpnService (разрешение, foreground, protect, stop, onRevoke), XrayConfig + TransportPolicy (защита узлов, DoH, логи без файлов), экран подключения.
+- Зелёная сборка: run 41011551036, коммит 47ee77d. AAR собран из тега v26.10.29, юнит-тесты и APK прошли, артефакт happ-compatible-debug.
+- SHA-256 AAR из логов владельца: 1ab93493fd55ab418666dcadc92ee7e6d79033f327f1dded77cfbecc6fa130ff (сверка с файлом из сессии невозможна).
+- НЕ ПРОВЕРЕНО: имена классов gomobile (go.libXray.LibXray и т. п.) в AAR; запуск ядра; работа туннеля на телефоне; DNS; kill-switch.
+- Ранее упавшие запуски: 41004926775, 41005558911, 41006281986 (ошибки компиляции в Gradle и в LibXrayEngine, исправлены).
+- Следующий шаг: проверка на телефоне с полным конфигом Xray (JSON), затем шаг 4 (конвертация ссылок через convertShareLinksToXrayJson).
