@@ -1,10 +1,13 @@
 name: Build libXray AAR (pinned)
 
 # Собирает libXray из закреплённого тега прямо в CI. Не использует готовые бинарники из интернета.
-# Запускается только вручную. Основная сборка клиента не затрагивается.
+# Запускается вручную или при изменении этого файла в рабочей ветке. Основная сборка клиента не затрагивается.
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["feature/happ-compatible-android-client"]
+    paths: [".github/workflows/libxray-aar.yml"]
 
 permissions:
   contents: read
