@@ -73,3 +73,10 @@ Pin exact upstream releases/commits. Check licence, provenance, checksum and ABI
 - Never overwrite production branch/subscription or commit private proxy links, UUIDs, passwords, tokens or certificates.
 - Do not claim build, install, VPN, security or carrier success without fresh evidence.
 - Before handing work onward, update this file with date, commit SHA, tests, workflow run ID, artifact ID/hash, known defects and exact next step.
+
+## Update 2026-10-30 (независимая проверка)
+- Проверен HEAD 15318c1: CI run 41002253188 — success (unit tests, assembleDebug, upload). Артефакт happ-compatible-debug, 4 912 209 байт, срок не истёк.
+- Исправлено в 74917b3: старый формат ss:// (вся часть до # в base64) теперь распознаётся; ввод больше 512 КБ и строки больше 8 КБ отклоняются. Добавлены тесты.
+- CI run 41002731575 на 74917b3 — success (unit tests, assembleDebug, upload), артефакт happ-compatible-debug, 4 912 968 байт.
+- SHA-256 артефакта из сессии не сверял: скачивание блоба недоступно. Сверить вручную, если нужно.
+- VPN и Xray по-прежнему не интегрированы; подключение отключено, это честно.
