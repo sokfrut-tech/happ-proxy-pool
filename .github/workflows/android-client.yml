@@ -93,13 +93,16 @@ jobs:
           grep -E "^e: |What went wrong|Could not|Execution failed|FAILED" "$f" | head -40 | while IFS= read -r line; do
             echo "::error::${line//$'\r'/}"
           done
-          # Имена классов из AAR: нужны, чтобы привязать LibXrayEngine к реальным классам gomobile.
+          # Диагностика AAR: что лежит в app/libs и какие классы внутри (для привязки LibXrayEngine).
+          echo "::error::DIAG libs: $(ls -la "$GITHUB_WORKSPACE/android-client/app/libs" 2>&1 | tr '\n' ' ')"
           aar="$GITHUB_WORKSPACE/android-client/app/libs/libXray.aar"
           if [ -f "$aar" ]; then
-            unzip -p "$aar" classes.jar > "$RUNNER_TEMP/classes.jar" || true
-            (cd "$RUNNER_TEMP" && unzip -l classes.jar | awk '{print $4}' | grep -E "\.class$" | head -60) | while IFS= read -r c; do
-              echo "::error::AAR class: $c"
-            done
+            unzip -l "$aar" > "$RUNNER_TEMP/aar-list.txt" 2>&1 || true
+            echo "::error::DIAG aar entries: $(head -20 "$RUNNER_TEMP/aar-list.txt" | awk '{print $4}' | tr '\n' ' ')"
+            unzip -o -q "$aar" classes.jar -d "$RUNNER_TEMP/aarx" || true
+            unzip -l "$RUNNER_TEMP/aarx/classes.jar" > "$RUNNER_TEMP/jar-list.txt" 2>&1 || true
+            grep -E 'LibXray|DialerController' "$RUNNER_TEMP/jar-list.txt" | awk '{print $4}' | head -20 > "$RUNNER_TEMP/names.txt" || true
+            while IFS= read -r n; do echo "::error::DIAG class: $n"; done < "$RUNNER_TEMP/names.txt"
           fi
 
       - name: Build debug APK
