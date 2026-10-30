@@ -10,6 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // libXray.aar собирается в CI в app/libs; flatDir — правильный способ подключить AAR.
+        flatDir { dirs("app/libs") }
     }
 }
 rootProject.name = "HappCompatibleClient"
