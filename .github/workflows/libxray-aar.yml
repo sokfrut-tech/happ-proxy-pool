@@ -53,10 +53,11 @@ jobs:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
         run: |
           set -euo pipefail
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION"
+          mkdir -p "$GITHUB_WORKSPACE/out"
           go install "$GOMOBILE_PKG"
           export PATH="$(go env GOPATH)/bin:$PATH"
           gomobile init
-          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION"
           gomobile bind -target android -androidapi 21 -trimpath \
             -ldflags="-checklinkname=0 -s -w -buildid= -extldflags=-Wl,-z,max-page-size=16384" \
             -o "$GITHUB_WORKSPACE/out/libXray.aar" ./
