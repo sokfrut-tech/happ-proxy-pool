@@ -96,3 +96,28 @@ Pin exact upstream releases/commits. Check licence, provenance, checksum and ABI
 - НЕ ПРОВЕРЕНО: имена классов gomobile (go.libXray.LibXray и т. п.) в AAR; запуск ядра; работа туннеля на телефоне; DNS; kill-switch.
 - Ранее упавшие запуски: 41004926775, 41005558911, 41006281986 (ошибки компиляции в Gradle и в LibXrayEngine, исправлены).
 - Следующий шаг: проверка на телефоне с полным конфигом Xray (JSON), затем шаг 4 (конвертация ссылок через convertShareLinksToXrayJson).
+
+
+## Current verified state — 2026-10-30 (review of branch HEAD)
+
+- Branch HEAD at review time: `bea781e6cf7e72c44031e54a185e2f200fe17ab0` (full SHA).
+- Latest Android workflow: run `41013784593`, commit `bea781e6cf7e72c44031e54a185e2f200fe17ab0`, conclusion `success`.
+- Verified successful steps: libXray pinned source checkout/build, Android TUN environment bridge injection, gomobile API verification, unit tests, debug APK assembly and artifact upload.
+- Artifact: `happ-compatible-debug`, artifact ID `12959156046`, size 55,976,486 bytes, SHA-256 `c30d6dc742cd6e12904a8cd30eb7c230f7c72c34f9331c1b1a1700dd6cd54da8`, expires 2027-01-28.
+- The actual AAR `classes.jar` was inspected. Generated API package/classes are `libXray.LibXray` and `libXray.DialerController`; the engine now uses typed calls rather than runtime class-name guessing. The AAR API exposes `registerDialerController`, `setTunFd`, `resetTunFd`, and `invoke`.
+- Android TUN FD is correctly passed through `LibXray.setTunFd(tunFd)`. The injected Go bridge calls `os.Setenv("xray.tun.fd", ...)`, which is the environment variable read by Xray-core's Android TUN implementation. It is not passed as a fake `env` member in the Xray JSON. Unit tests explicitly check that the JSON does not contain an `env` field and that a user-supplied `env` field is removed.
+- No phone-side test has been performed in this workflow review. Do not claim that kernel startup, packet forwarding, DNS leak prevention, VPN revocation, or Megafon/DPI behaviour works on a physical device.
+
+### Important DNS limitation found during source review
+
+- `TransportPolicy` routes DNS packets entering the Android TUN on port 53 to Xray's DNS outbound and enforces DoH upstreams for that Xray DNS path.
+- Separately, `LibXrayEngine.start()` currently calls `LibXray.setDNS(..., "8.8.8.8:53")`. Upstream libXray v26.10.29 implements this as Go's process-wide resolver using UDP to the specified IP/port, with `VpnService.protect()` on the socket. This is a direct, plaintext DNS bootstrap path outside the TUN; it is not DoH.
+- Therefore the broad claim "all DNS is DoH / no plaintext DNS" is not yet proven and is currently false for lookups performed by the Go resolver. Before release, replace this bootstrap path with a design that meets the no-plaintext-DNS requirement, or document the exact limited exception and obtain explicit user acceptance. Do not silently label the current configuration leak-free.
+- Do not remove the resolver bridge blindly: domain-based proxy server addresses may need bootstrap resolution, and an unprotected/system resolver can create a routing loop. Design and test bootstrap resolution explicitly.
+
+### Next actions
+
+1. Resolve the Go bootstrap DNS design above and add tests/source-level verification for the chosen behaviour.
+2. Perform physical Android testing with a disposable test node/config: kernel start, connected-state confirmation, IP egress, disconnect/route restoration, VPN permission revocation, and failure-state cleanup.
+3. Verify DNS with packet capture or a trusted leak test that distinguishes TUN client DNS from Go bootstrap DNS.
+4. Only after those tests, proceed to share-link conversion tests for VLESS, VMess, Trojan, Shadowsocks and SOCKS. Keep DPI experiments separate and unclaimed until measured on the target carrier.
