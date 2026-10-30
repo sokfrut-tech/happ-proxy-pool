@@ -80,3 +80,11 @@ Pin exact upstream releases/commits. Check licence, provenance, checksum and ABI
 - CI run 41002731575 на 74917b3 — success (unit tests, assembleDebug, upload), артефакт happ-compatible-debug, 4 912 968 байт.
 - SHA-256 артефакта из сессии не сверял: скачивание блоба недоступно. Сверить вручную, если нужно.
 - VPN и Xray по-прежнему не интегрированы; подключение отключено, это честно.
+
+## libXray AAR (шаг 1 плана, 2026-10-30)
+- Workflow: .github/workflows/libxray-aar.yml (сборка из исходников тега v26.10.29 через gomobile, minSdk 21).
+- Лицензия libXray: MIT. Xray-core: MPL-2.0. Закреплённый Xray-core: v26.10.29.
+- Успешный запуск: 41004085041 (коммит e16558d), артефакт libxray-aar-v26.10.29, 52 387 760 байт.
+- SHA-256 AAR: записан в Summary страницы запуска (шаг «Summary»). Из сессии его прочитать нельзя, блоб недоступен. Сверить по странице запуска и вписать сюда.
+- Предыдущий запуск 41003651370 упал: NDK задавался после gomobile init, папка out не создавалась. Исправлено в коммите e16558d.
+- AAR ещё не подключён к приложению.
