@@ -35,6 +35,11 @@ jobs:
           path: libxray-src
           fetch-depth: 1
 
+      - name: Add Android TUN environment bridge
+        run: |
+          set -euo pipefail
+          cp android-client/native/libxray_android_env.go libxray-src/android_env_android.go
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -76,6 +81,17 @@ jobs:
           echo "ABIs in AAR:" >> "$GITHUB_STEP_SUMMARY"
           unzip -l libXray.aar | grep -o 'jni/[^/]*/' | sort -u >> "$GITHUB_STEP_SUMMARY"
           unzip -l libXray.aar | grep -q 'jni/arm64-v8a/' || { echo "::error::AAR без arm64-v8a"; exit 1; }
+
+      - name: Verify generated gomobile API
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/libxray-api"
+          unzip -p android-client/app/libs/libXray.aar classes.jar > "$RUNNER_TEMP/libxray-api/classes.jar"
+          javap -classpath "$RUNNER_TEMP/libxray-api/classes.jar" libXray.LibXray libXray.DialerController > "$RUNNER_TEMP/libxray-api/api.txt"
+          grep -q 'registerDialerController' "$RUNNER_TEMP/libxray-api/api.txt"
+          grep -q 'setTunFd' "$RUNNER_TEMP/libxray-api/api.txt"
+          grep -q 'resetTunFd' "$RUNNER_TEMP/libxray-api/api.txt"
+          cat "$RUNNER_TEMP/libxray-api/api.txt" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Unit tests
         shell: bash

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches: ["feature/happ-compatible-android-client"]
-    paths: [".github/workflows/libxray-aar.yml"]
+    paths: [".github/workflows/libxray-aar.yml", "android-client/native/libxray_android_env.go"]
 
 permissions:
   contents: read
@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
       - name: Checkout libXray at pinned tag
         uses: actions/checkout@v4
         with:
@@ -29,6 +32,11 @@ jobs:
           ref: ${{ env.LIBXRAY_TAG }}
           path: libxray
           fetch-depth: 1
+
+      - name: Add Android TUN environment bridge
+        run: |
+          set -euo pipefail
+          cp android-client/native/libxray_android_env.go libxray/android_env_android.go
 
       - name: Set up Go from libXray go.mod
         uses: actions/setup-go@v5
@@ -64,6 +72,11 @@ jobs:
           cd "$GITHUB_WORKSPACE/out"
           sha256sum libXray.aar | tee libXray.aar.sha256
           ls -l libXray.aar
+          mkdir -p "$RUNNER_TEMP/libxray-api"
+          unzip -p libXray.aar classes.jar > "$RUNNER_TEMP/libxray-api/classes.jar"
+          javap -classpath "$RUNNER_TEMP/libxray-api/classes.jar" libXray.LibXray libXray.DialerController > "$RUNNER_TEMP/libxray-api/api.txt"
+          grep -q 'setTunFd' "$RUNNER_TEMP/libxray-api/api.txt"
+          grep -q 'resetTunFd' "$RUNNER_TEMP/libxray-api/api.txt"
 
       - name: Summary
         run: |
