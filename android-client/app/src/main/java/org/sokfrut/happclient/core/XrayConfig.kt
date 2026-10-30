@@ -33,6 +33,12 @@ object XrayConfig {
         }
         if (tunFd < 0) return Result.Invalid("нет дескриптора VPN")
 
+        for (i in 0 until outbounds.length()) {
+            val item = outbounds.optJSONObject(i) ?: return Result.Invalid("узел $i не объект")
+            TransportPolicy.checkOutbound(item)?.let { return Result.Invalid("узел $i: $it") }
+        }
+        TransportPolicy.enforceGlobals(root)
+
         root.put("inbounds", JSONArray().put(
             JSONObject()
                 .put("tag", TUN_TAG)

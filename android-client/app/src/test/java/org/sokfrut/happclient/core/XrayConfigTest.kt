@@ -40,4 +40,16 @@ class XrayConfigTest {
         val big = validConfig + " ".repeat(XrayConfig.MAX_CONFIG_CHARS)
         assertTrue(XrayConfig.build(big, 1) is XrayConfig.Result.Invalid)
     }
+
+    @Test fun rejectsPlaintextOutboundInConfig() {
+        val plain = """{"outbounds":[{"protocol":"vless","settings":{},"streamSettings":{"security":"none"}}]}"""
+        assertTrue(XrayConfig.build(plain, 1) is XrayConfig.Result.Invalid)
+    }
+
+    @Test fun addsEncryptedDnsAndNoLogFiles() {
+        val result = XrayConfig.build(validConfig, 9) as XrayConfig.Result.Ok
+        val root = JSONObject(result.json)
+        assertEquals("https://1.1.1.1/dns-query", root.getJSONObject("dns").getJSONArray("servers").getString(0))
+        assertEquals("warning", root.getJSONObject("log").getString("loglevel"))
+    }
 }
