@@ -13,11 +13,19 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import android.content.Intent
+import android.net.VpnService
 import androidx.appcompat.app.AlertDialog
+import org.sokfrut.happclient.core.TunnelState
+import org.sokfrut.happclient.core.XrayConfig
+import org.sokfrut.happclient.vpn.HappVpnService
+import org.sokfrut.happclient.vpn.TunnelStatus
 
 class MainActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var details: TextView
+    private lateinit var connectButton: Button
+    private lateinit var disconnectButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,12 +36,12 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
         }
         status = TextView(this).apply {
-            text = "Прототип · VPN-движок ещё не подключён"
+            text = "Туннель: ${TunnelStatus.state.label}"
             textSize = 16f
             gravity = Gravity.CENTER
         }
         details = TextView(this).apply {
-            text = "Импортируй список ссылок VLESS / VMess / Trojan / Shadowsocks / SOCKS.\nПока доступна только проверка формата."
+            text = "Для подключения вставь полный конфиг Xray (JSON). Список ссылок пока только проверяется по формату."
             textSize = 14f
         }
         val pasteButton = Button(this).apply {
@@ -44,9 +52,19 @@ class MainActivity : Activity() {
             text = "Вставить текст вручную"
             setOnClickListener { showManualImport() }
         }
-        val connectButton = Button(this).apply {
-            text = "VPN-движок ещё не подключён"
+        val configButton = Button(this).apply {
+            text = "Вставить конфиг Xray (JSON)"
+            setOnClickListener { showConfigInput() }
+        }
+        connectButton = Button(this).apply {
+            text = "Подключить"
             isEnabled = false
+            setOnClickListener { requestVpnAndConnect() }
+        }
+        disconnectButton = Button(this).apply {
+            text = "Отключить"
+            isEnabled = false
+            setOnClickListener { sendVpnAction(HappVpnService.ACTION_STOP) }
         }
 
         val layout = LinearLayout(this).apply {
@@ -58,9 +76,81 @@ class MainActivity : Activity() {
             addView(details)
             addView(pasteButton)
             addView(manualButton)
+            addView(configButton)
             addView(connectButton)
+            addView(disconnectButton)
         }
         setContentView(ScrollView(this).apply { addView(layout) })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        TunnelStatus.listen { state -> renderTunnel(state) }
+    }
+
+    override fun onPause() {
+        TunnelStatus.listen(null)
+        super.onPause()
+    }
+
+    private fun renderTunnel(state: TunnelState) {
+        status.text = "Туннель: ${state.label}"
+        val hasConfig = TunnelStatus.pendingConfig != null
+        connectButton.isEnabled = hasConfig && state !is TunnelState.Connected && state !is TunnelState.Connecting
+        disconnectButton.isEnabled = state is TunnelState.Connected || state is TunnelState.Connecting
+    }
+
+    /** Конфиг вставляется вручную и хранится только в памяти процесса: не на диск и не в логи. */
+    private fun showConfigInput() {
+        val editor = EditText(this).apply {
+            hint = "Полный JSON-конфиг Xray с outbounds"
+            minLines = 6
+            gravity = Gravity.TOP
+            setTextIsSelectable(true)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Конфиг Xray")
+            .setView(editor)
+            .setNegativeButton("Отмена", null)
+            .setPositiveButton("Сохранить") { _, _ ->
+                val text = editor.text.toString()
+                val check = XrayConfig.build(text, 0)
+                if (check is XrayConfig.Result.Invalid) {
+                    Toast.makeText(this, "Не подходит: ${check.reason}", Toast.LENGTH_LONG).show()
+                } else {
+                    TunnelStatus.pendingConfig = text
+                    details.text = "Конфиг сохранён в памяти приложения. Он не записывается на диск."
+                    renderTunnel(TunnelStatus.state)
+                }
+            }
+            .show()
+    }
+
+    private fun requestVpnAndConnect() {
+        val consent = VpnService.prepare(this)
+        if (consent != null) {
+            startActivityForResult(consent, REQUEST_VPN)
+        } else {
+            sendVpnAction(HappVpnService.ACTION_START)
+        }
+    }
+
+    @Deprecated("Используется для запроса разрешения VPN")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_VPN) {
+            if (resultCode == RESULT_OK) sendVpnAction(HappVpnService.ACTION_START)
+            else TunnelStatus.update(TunnelState.Error("VPN не разрешён"))
+        }
+    }
+
+    private fun sendVpnAction(action: String) {
+        val intent = Intent(this, HappVpnService::class.java).setAction(action)
+        if (action == HappVpnService.ACTION_START) startForegroundService(intent) else startService(intent)
+    }
+
+    companion object {
+        private const val REQUEST_VPN = 41
     }
 
     private fun importFromClipboard() {
