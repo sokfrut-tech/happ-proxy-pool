@@ -186,7 +186,7 @@ class MainActivity : Activity() {
         // Only the aggregate parse summary is retained in the UI; raw links and credentials are never logged or displayed.
         val summary = SubscriptionLineParser.parse(text)
         status.text = "Импорт проверен · VPN не запущен"
-        details.text = summary.safeSummary + "\n\nПодключение пока отключено: сетевой движок ещё не интегрирован."
+        details.text = summary.safeSummary + "\n\nСсылки проверены по формату. Для подключения вставь полный JSON-конфиг Xray."
         Toast.makeText(this, "Проверка завершена", Toast.LENGTH_SHORT).show()
     }
 }

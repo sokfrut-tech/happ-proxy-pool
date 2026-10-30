@@ -4,6 +4,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TransportPolicyTest {
@@ -45,7 +46,7 @@ class TransportPolicyTest {
         val notes = TransportPolicy.enforceGlobals(root)
         assertEquals("warning", root.getJSONObject("log").getString("loglevel"))
         assertNull(root.getJSONObject("log").opt("access"))
-        assertEquals(2, notes.size)
+        assertEquals(3, notes.size)
         assertEquals("https://1.1.1.1/dns-query", root.getJSONObject("dns").getJSONArray("servers").getString(0))
     }
 
@@ -53,5 +54,27 @@ class TransportPolicyTest {
         val root = JSONObject("""{"dns":{"servers":["https://dns.example/dns-query"]}}""")
         TransportPolicy.enforceGlobals(root)
         assertEquals("https://dns.example/dns-query", root.getJSONObject("dns").getJSONArray("servers").getString(0))
+    }
+    @Test fun removesPlaintextDnsEvenWhenDohIsAlreadyConfigured() {
+        val config = """{"dns":{"servers":["8.8.8.8","https://1.1.1.1/dns-query"]},"outbounds":[{"protocol":"freedom","tag":"direct"}]}"""
+        val root = JSONObject(config)
+        TransportPolicy.enforceGlobals(root)
+        val servers = root.getJSONObject("dns").getJSONArray("servers")
+        assertEquals(1, servers.length())
+        assertTrue(servers.getString(0).startsWith("https://"))
+    }
+
+    @Test fun routesTunDnsPacketsThroughDedicatedDnsOutbound() {
+        val root = JSONObject("""{"outbounds":[{"protocol":"freedom","tag":"direct"}]}""")
+        TransportPolicy.enforceGlobals(root)
+        val outbounds = root.getJSONArray("outbounds")
+        val dnsOutbound = (0 until outbounds.length()).map { outbounds.getJSONObject(it) }
+            .first { it.optString("tag").startsWith("happ-doh-dns") }
+        assertEquals("dns", dnsOutbound.getString("protocol"))
+        val rule = root.getJSONObject("routing").getJSONArray("rules").getJSONObject(0)
+        assertEquals("53", rule.getString("port"))
+        assertEquals("tcp,udp", rule.getString("network"))
+        assertEquals("tun-in", rule.getJSONArray("inboundTag").getString(0))
+        assertEquals(dnsOutbound.getString("tag"), rule.getString("outboundTag"))
     }
 }

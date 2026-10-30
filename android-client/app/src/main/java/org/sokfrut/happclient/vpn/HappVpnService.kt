@@ -38,7 +38,7 @@ class HappVpnService : VpnService() {
 
     private fun startTunnel() {
         if (TunnelStatus.state == TunnelState.Connected || TunnelStatus.state == TunnelState.Connecting) return
-        showForeground()
+        showForeground("Подключение VPN")
         TunnelStatus.update(TunnelState.Connecting)
         val config = TunnelStatus.pendingConfig
         worker.execute {
@@ -50,6 +50,7 @@ class HappVpnService : VpnService() {
                 stopSelf()
             } else {
                 TunnelStatus.update(TunnelState.Connected)
+                showForeground("VPN подключён")
             }
         }
     }
@@ -107,7 +108,7 @@ class HappVpnService : VpnService() {
         super.onDestroy()
     }
 
-    private fun showForeground() {
+    private fun showForeground(contentText: String) {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, "VPN", NotificationManager.IMPORTANCE_LOW)
@@ -119,7 +120,7 @@ class HappVpnService : VpnService() {
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentTitle("Happ Compatible")
-            .setContentText("VPN работает")
+            .setContentText(contentText)
             .setOngoing(true)
             .setContentIntent(openApp)
             .build()
