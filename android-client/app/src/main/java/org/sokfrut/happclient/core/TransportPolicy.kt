@@ -44,7 +44,9 @@ object TransportPolicy {
         }
         if (security == "reality") {
             val reality = stream?.optJSONObject("realitySettings")
-            if (reality == null || reality.optString("publicKey").isBlank()) {
+            // В актуальной документации Xray клиентский публичный ключ называется password (раньше publicKey).
+            val publicKey = reality?.optString("password").orEmpty().ifBlank { reality?.optString("publicKey").orEmpty() }
+            if (reality == null || publicKey.isBlank()) {
                 return "REALITY без публичного ключа"
             }
         }

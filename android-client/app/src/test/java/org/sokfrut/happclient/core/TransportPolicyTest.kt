@@ -77,4 +77,9 @@ class TransportPolicyTest {
         assertEquals("tun-in", rule.getJSONArray("inboundTag").getString(0))
         assertEquals(dnsOutbound.getString("tag"), rule.getString("outboundTag"))
     }
+
+    @Test fun acceptsRealityPasswordFieldFromCurrentDocs() {
+        assertNull(TransportPolicy.checkOutbound(vless("reality",
+            ""","realitySettings":{"password":"pubkey","serverName":"a.example"}""")))
+    }
 }
