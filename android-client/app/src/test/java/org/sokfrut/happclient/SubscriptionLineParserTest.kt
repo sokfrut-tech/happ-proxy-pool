@@ -33,4 +33,17 @@ class SubscriptionLineParserTest {
         assertEquals(1, result.supportedCount)
         assertEquals(0, result.rejectedCount)
     }
+
+    @Test fun acceptsLegacyBase64ShadowsocksLink() {
+        val payload = java.util.Base64.getEncoder().encodeToString("aes-256-gcm:pass@example.org:8388".toByteArray())
+        val result = SubscriptionLineParser.parse("ss://$payload#node")
+        assertEquals(1, result.supportedCount)
+        assertEquals(0, result.rejectedCount)
+    }
+
+    @Test fun rejectsOversizedInput() {
+        val result = SubscriptionLineParser.parse("vless://id@example.org:443\n".repeat(60_000))
+        assertEquals(0, result.supportedCount)
+        assertEquals(0, result.rejectedCount)
+    }
 }
