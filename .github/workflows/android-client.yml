@@ -78,8 +78,21 @@ jobs:
           unzip -l libXray.aar | grep -q 'jni/arm64-v8a/' || { echo "::error::AAR без arm64-v8a"; exit 1; }
 
       - name: Unit tests
-        run: gradle testDebugUnitTest
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/unit.log"
         working-directory: android-client
+
+      - name: Show compile errors as annotations
+        if: failure()
+        shell: bash
+        run: |
+          f="$RUNNER_TEMP/unit.log"
+          [ -f "$f" ] || exit 0
+          grep -E "^e: |What went wrong|Could not|Execution failed|FAILED" "$f" | head -40 | while IFS= read -r line; do
+            echo "::error::${line//$'\r'/}"
+          done
 
       - name: Build debug APK
         run: gradle assembleDebug
