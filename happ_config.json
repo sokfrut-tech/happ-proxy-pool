@@ -78,35 +78,6 @@
       "settings": {
         "vnext": [
           {
-            "address": "104.21.82.183",
-            "port": 8880,
-            "users": [
-              {
-                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
-                "alterId": 0,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "none",
-        "wsSettings": {
-          "path": "/",
-          "headers": {
-            "Host": "server26.beheshtbaneh.com"
-          }
-        }
-      }
-    },
-    {
-      "tag": "node_3",
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
             "address": "gov.uk",
             "port": 443,
             "users": [
@@ -130,6 +101,35 @@
           "path": "/77848824",
           "headers": {
             "Host": "zheshiscp.com"
+          }
+        }
+      }
+    },
+    {
+      "tag": "node_3",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "104.21.82.183",
+            "port": 8880,
+            "users": [
+              {
+                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
+                "alterId": 0,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/",
+          "headers": {
+            "Host": "server26.beheshtbaneh.com"
           }
         }
       }
