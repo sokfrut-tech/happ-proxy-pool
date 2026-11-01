@@ -49,11 +49,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "104.21.82.183",
-            "port": 8880,
+            "address": "www.darkroom.lol",
+            "port": 8080,
             "users": [
               {
-                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
+                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -67,7 +67,7 @@
         "wsSettings": {
           "path": "/",
           "headers": {
-            "Host": "server26.beheshtbaneh.com"
+            "Host": "www.darkroom.lol"
           }
         }
       }
@@ -111,11 +111,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "www.darkroom.lol",
-            "port": 8080,
+            "address": "104.21.82.183",
+            "port": 8880,
             "users": [
               {
-                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
+                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -129,7 +129,7 @@
         "wsSettings": {
           "path": "/",
           "headers": {
-            "Host": "www.darkroom.lol"
+            "Host": "server26.beheshtbaneh.com"
           }
         }
       }
