@@ -51,6 +51,7 @@ def fetch_links():
                 raise ValueError("Subscription source must be HTTPS on the configured raw.githubusercontent.com host")
             # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected — URL comes from the fixed SOURCES allowlist and is host/scheme validated, never from user input.
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected — URL is constrained to the fixed HTTPS source host above.
             with urllib.request.urlopen(req, timeout=15) as response:
                 body = response.read(2_000_000).decode("utf-8", "ignore")
             for link in decode_subscription(body):
