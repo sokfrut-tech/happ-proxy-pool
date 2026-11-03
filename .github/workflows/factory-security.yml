@@ -47,6 +47,6 @@ jobs:
 
   factory-toolchain:
     name: Factory shared static toolchain
-    uses: sokfrut-tech/Universal-AI-Factory/.github/workflows/factory-security-reusable.yml@61ad35797240295f280b50c68915539a06b94b9b
+    uses: sokfrut-tech/Universal-AI-Factory/.github/workflows/factory-security-reusable.yml@50678f1d19c7cdf477e1dbc64bad893b1389eca4
     permissions:
       contents: read
