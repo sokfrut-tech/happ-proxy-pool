@@ -46,6 +46,10 @@ def fetch_links():
     found, seen = [], set()
     for url in SOURCES:
         try:
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.scheme != "https" or parsed.hostname != "raw.githubusercontent.com" or parsed.username or parsed.password:
+                raise ValueError("Subscription source must be HTTPS on the configured raw.githubusercontent.com host")
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected — URL comes from the fixed SOURCES allowlist and is host/scheme validated, never from user input.
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
             with urllib.request.urlopen(req, timeout=15) as response:
                 body = response.read(2_000_000).decode("utf-8", "ignore")
