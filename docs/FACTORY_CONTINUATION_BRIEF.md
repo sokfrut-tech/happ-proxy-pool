@@ -22,3 +22,8 @@ No credential harvesting, no stealth, no access to private networks, no unsafe u
 
 ## Resume
 Refresh PR #1/#3 and CI, inspect the exact test harness and continue with isolated test cases. External agent availability is optional.
+
+
+## Documentation handoff PR
+- Continuation brief PR: [#4](https://github.com/sokfrut-tech/happ-proxy-pool/pull/4) (draft; not merged).
+- Review this brief against current main before code changes.
