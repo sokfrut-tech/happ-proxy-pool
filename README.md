@@ -21,3 +21,13 @@ GitHub Actions is only the free automation host within GitHub's usage limits. It
 - Runs hourly at minute 15 (UTC).
 - Runs after commits to `main`.
 - Can be started manually from Actions.
+
+
+## Separate Happ trial groups
+
+The generator publishes two separate subscription lists so they appear as two distinct profiles in Happ:
+
+- `happ_mobile.txt` — **DE MOBILE TEST**
+- `happ_home.txt` — **DE HOME WIFI TEST**
+
+Both lists are split from the same Germany-only pool, alternating latency-ranked nodes to balance the sets. These labels are trial buckets only: GitHub checks do not prove compatibility with a specific mobile carrier or home router. Test each profile on the corresponding network before treating it as suitable.
