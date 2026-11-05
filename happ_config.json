@@ -49,11 +49,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "www.darkroom.lol",
-            "port": 8080,
+            "address": "gov.uk",
+            "port": 443,
             "users": [
               {
-                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
+                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -63,11 +63,15 @@
       },
       "streamSettings": {
         "network": "ws",
-        "security": "none",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "zheshiscp.com",
+          "fingerprint": "chrome"
+        },
         "wsSettings": {
-          "path": "/",
+          "path": "/77848824",
           "headers": {
-            "Host": "www.darkroom.lol"
+            "Host": "zheshiscp.com"
           }
         }
       }
@@ -107,11 +111,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "gov.uk",
-            "port": 443,
+            "address": "www.darkroom.lol",
+            "port": 8080,
             "users": [
               {
-                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
+                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -121,15 +125,11 @@
       },
       "streamSettings": {
         "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "zheshiscp.com",
-          "fingerprint": "chrome"
-        },
+        "security": "none",
         "wsSettings": {
-          "path": "/77848824",
+          "path": "/",
           "headers": {
-            "Host": "zheshiscp.com"
+            "Host": "www.darkroom.lol"
           }
         }
       }
