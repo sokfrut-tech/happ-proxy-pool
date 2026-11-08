@@ -49,11 +49,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "gov.uk",
-            "port": 443,
+            "address": "104.21.82.183",
+            "port": 8880,
             "users": [
               {
-                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
+                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -63,15 +63,11 @@
       },
       "streamSettings": {
         "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "zheshiscp.com",
-          "fingerprint": "chrome"
-        },
+        "security": "none",
         "wsSettings": {
-          "path": "/77848824",
+          "path": "/",
           "headers": {
-            "Host": "zheshiscp.com"
+            "Host": "server26.beheshtbaneh.com"
           }
         }
       }
@@ -111,11 +107,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "104.21.82.183",
-            "port": 8880,
+            "address": "gov.uk",
+            "port": 443,
             "users": [
               {
-                "id": "5a7021e0-26b4-45d6-b175-fe551601ca97",
+                "id": "77848824-93b7-4b89-ffd0-e91afff406ce",
                 "alterId": 0,
                 "security": "auto"
               }
@@ -125,11 +121,15 @@
       },
       "streamSettings": {
         "network": "ws",
-        "security": "none",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "zheshiscp.com",
+          "fingerprint": "chrome"
+        },
         "wsSettings": {
-          "path": "/",
+          "path": "/77848824",
           "headers": {
-            "Host": "server26.beheshtbaneh.com"
+            "Host": "zheshiscp.com"
           }
         }
       }
